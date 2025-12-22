@@ -74,13 +74,20 @@ import Sensors from "../pages/Sensors";
 import PlcMachineData from "../pages/PlcMachineData";
 import PlcDemo from "../pages/plcddemo";
 const routes = [
-  {
-    name: "Dashboard",
-    icon: <MdOutlineSpeed />,
-    path: "",
-    element: <Dashboard />,
-    isSublink: false,
-  },
+   {
+      name: "Live Data",
+      icon: <Activity />,
+      path: "",
+      element: <MachineStatus />,
+      isSublink: false,
+    },
+  // {
+  //   name: "Dashboard",
+  //   icon: <MdOutlineSpeed />,
+  //   path: "",
+  //   element: <Dashboard />,
+  //   isSublink: false,
+  // },
 
   {
     name: "Employees",
@@ -96,13 +103,13 @@ const routes = [
   //   element: <Sensors />,
   //   isSublink: false,
   // },
-  {
-    name: "Live Data",
-    icon: <BarChart3 />,
-    path: "Plc-Demo",
-    element: <PlcDemo />,
-    isSublink: false,
-  },
+  // {
+  //   name: "Live Data",
+  //   icon: <BarChart3 />,
+  //   path: "Plc-Demo",
+  //   element: <PlcDemo />,
+  //   isSublink: false,
+  // },
   // {
   //   name: "PLC Machine Data",
   //   icon: <BarChart3 />,
@@ -125,31 +132,25 @@ const routes = [
     element: <Resources />,
     isSublink: false,
   },
-//  {
-//     name: "Resource Status",
-//     icon: <Activity />,
-//     path: "machine-status",
-//     element: <MachineStatus />,
-//     isSublink: false,
-//   },
-//   {
-//     name: "Merchant",
-//     icon: <IoIosPeople />,
-//     path: "merchant",
-//     element: <Parties />,
-//     isSublink: false,
-//   },
-//   {
-//     name: "Inventory",
-//     icon: <MdOutlineShoppingCart />,
-//     path: "inventory",
-//      sublink: [
-       // {
-       //   name: "Dashboard",
-       //   icon: <MdOutlineSpeed />,
-       //   path: "dashboard",
-       //   element: <InventoryDashboard />,
-       // },
+
+  //   {
+  //     name: "Merchant",
+  //     icon: <IoIosPeople />,
+  //     path: "merchant",
+  //     element: <Parties />,
+  //     isSublink: false,
+  //   },
+  //   {
+  //     name: "Inventory",
+  //     icon: <MdOutlineShoppingCart />,
+  //     path: "inventory",
+  //      sublink: [
+  // {
+  //   name: "Dashboard",
+  //   icon: <MdOutlineSpeed />,
+  //   path: "dashboard",
+  //   element: <InventoryDashboard />,
+  // },
   //      {
   //        name: "Direct",
   //        icon: <SlDirection />,
@@ -242,7 +243,7 @@ const routes = [
   //       path: "production-status",
   //       element: <ProductionStatus />,
   //     },
-     
+
   //   ],
   //   isSublink: true,
   // },
@@ -258,18 +259,18 @@ const routes = [
   //   path: "accounts",
   //   icon: <BiPurchaseTagAlt />,
   //   sublink: [
-      // {
-      //   name: "Dashboard",
-      //   icon: <MdOutlineSpeed />,
-      //   path: "dashboard",
-      //   element: <AccountantDashboard />,
-      // },
-      // {
-      //   name: "Dashboard",
-      //   icon: <MdOutlineSpeed />,
-      //   path: "dashboard",
-      //   element: <AccountantDashboard />,
-      // },
+  // {
+  //   name: "Dashboard",
+  //   icon: <MdOutlineSpeed />,
+  //   path: "dashboard",
+  //   element: <AccountantDashboard />,
+  // },
+  // {
+  //   name: "Dashboard",
+  //   icon: <MdOutlineSpeed />,
+  //   path: "dashboard",
+  //   element: <AccountantDashboard />,
+  // },
   //     {
   //       name: "Proforma Invoices",
   //       icon: <IoDocumentTextOutline />,

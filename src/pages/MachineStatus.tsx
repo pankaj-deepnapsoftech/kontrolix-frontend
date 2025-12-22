@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useCookies } from "react-cookie";
 import {
@@ -39,96 +41,131 @@ const MachineStatus: React.FC = () => {
   const [machineData, setMachineData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMachine, setSelectedMachine] = useState<string>("all");
-  const [selectedShift, setSelectedShift] = useState<string>("all");
-  const [selectedDesign, setSelectedDesign] = useState<string>("all");
+  const [selectedBrand, setSelectedBrand] = useState<string>("all");
+  const [selectedProtocol, setSelectedProtocol] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
   const [refreshInterval, setRefreshInterval] = useState<number>(30); // seconds
 
-  // Machine data API endpoint
-  const machineApiUrl = `${process.env.REACT_APP_BACKEND_URL}machine/machine-data`;
+  // PLC data API endpoint
+  const machineApiUrl = `http://192.168.1.33:8085/api/plc-data/all`;
 
   // Store API summary data for statistics cards
   const [apiSummaryData, setApiSummaryData] = useState<any>(null);
 
-  // Transform Machine API array into the card/chart structure
+  // Transform PLC API array - Group by machine and get latest data per machine
   const transformMachineData = (rows: any[]) => {
-    return rows.map((item: any) => {
+    // Group by plc_brand only - one card per brand with latest data
+    const machineMap = new Map<string, any>();
+
+    rows.forEach((item: any) => {
+      const machineKey = item.plc_brand; // Group by brand only
       const ts = item.timestamp ? new Date(item.timestamp) : new Date();
-      return {
-        deviceId: item.device_id || "Unknown",
-        timestamp: ts.toLocaleString(),
-        shift: item.shift || "-",
-        design: item.design || "-",
-        count: item.count ?? 0,
-        efficiency: item.efficiency ?? 0,
-        error1: item.error1 ?? 0,
-        error2: item.error2 ?? 0,
-        status: item.status || "unknown",
-      };
+
+      // Only keep the latest data for each machine (brand)
+      const existing = machineMap.get(machineKey);
+      if (
+        !existing ||
+        new Date(item.timestamp) > new Date(existing.rawTimestamp)
+      ) {
+        machineMap.set(machineKey, {
+          machineKey,
+          deviceId: item.plc_brand,
+          plcBrand: item.plc_brand || "Unknown",
+          plcModel: item.plc_model || "Unknown",
+          plcProtocol: item.plc_protocol || "Unknown",
+          timestamp: ts.toLocaleString(),
+          rawTimestamp: item.timestamp,
+          temperature: item.temperature ?? 0,
+          pressure: item.pressure ?? 0,
+          rpm: item.rpm ?? 0,
+          productionCount: item.production_count ?? 0,
+          motorStatus: item.motor_status ?? 0,
+          productionActive: item.production_active ?? 0,
+          plcRunning: item.plc_running ?? false,
+          // Status will be set later based on order
+          status: "stopped",
+        });
+      }
     });
+
+    // Convert to array and sort by latest timestamp (most recent first)
+    const machinesArray = Array.from(machineMap.values()).sort(
+      (a, b) =>
+        new Date(b.rawTimestamp).getTime() - new Date(a.rawTimestamp).getTime()
+    );
+
+    // Set status based on order: 1st = running, 2nd = idle, rest = stopped
+    // Keep the actual API values for motorStatus, productionActive, plcRunning
+    machinesArray.forEach((machine, index) => {
+      if (index === 0) {
+        machine.status = "running";
+      } else if (index === 1) {
+        machine.status = "idle";
+      } else {
+        machine.status = "stopped";
+      }
+    });
+
+    return machinesArray;
   };
 
   // Build lightweight summary stats for the top cards
   const buildSummary = (data: any[]) => {
-    const total_production = data.reduce((sum, d) => sum + (d.count || 0), 0);
-    const avg_efficiency =
-      data.length === 0
-        ? 0
-        : data.reduce((sum, d) => sum + (Number(d.efficiency) || 0), 0) /
-          data.length;
-    const total_errors = data.reduce(
-      (sum, d) => sum + (d.error1 || 0) + (d.error2 || 0),
+    const total_production = data.reduce(
+      (sum, d) => sum + (d.productionCount || 0),
       0
     );
-    const error1_count = data.reduce((sum, d) => sum + (d.error1 || 0), 0);
-    const error2_count = data.reduce((sum, d) => sum + (d.error2 || 0), 0);
+    const avg_temperature =
+      data.length === 0
+        ? 0
+        : data.reduce((sum, d) => sum + (Number(d.temperature) || 0), 0) /
+          data.length;
+    const avg_pressure =
+      data.length === 0
+        ? 0
+        : data.reduce((sum, d) => sum + (Number(d.pressure) || 0), 0) /
+          data.length;
+    const avg_rpm =
+      data.length === 0
+        ? 0
+        : data.reduce((sum, d) => sum + (Number(d.rpm) || 0), 0) / data.length;
     const running_count = data.filter((d) => d.status === "running").length;
     const idle_count = data.filter((d) => d.status === "idle").length;
     const stopped_count = data.filter((d) => d.status === "stopped").length;
-    const maintenance_count = data.filter(
-      (d) => d.status === "maintenance"
-    ).length;
-    const designs = Array.from(new Set(data.map((d) => d.design)));
+    const brands = Array.from(new Set(data.map((d) => d.plcBrand)));
+    const protocols = Array.from(new Set(data.map((d) => d.plcProtocol)));
 
     return {
       total_production,
-      avg_efficiency,
-      total_errors,
-      error1_count,
-      error2_count,
+      avg_temperature,
+      avg_pressure,
+      avg_rpm,
       status_summary: {
         total_machines: data.length,
         running: running_count,
         idle: idle_count,
         stopped: stopped_count,
-        maintenance: maintenance_count,
       },
-      designs,
+      brands,
+      protocols,
     };
   };
 
   const fetchMachineData = useCallback(
-    async (deviceId: string = "all") => {
+    async (machineKey: string = "all") => {
       setIsLoading(true);
       try {
-        const url =
-          deviceId === "all"
-            ? machineApiUrl
-            : `${machineApiUrl}?device_id=${encodeURIComponent(deviceId)}`;
-
-        const response = await fetch(url);
+        const response = await fetch(machineApiUrl);
 
         if (!response.ok) {
-          throw new Error("Failed to fetch machine data");
+          throw new Error("Failed to fetch PLC data");
         }
 
         const result = await response.json();
         if (!result.success || !Array.isArray(result.data)) {
-          throw new Error(
-            result.message || "Unexpected response from Machine API"
-          );
+          throw new Error(result.message || "Unexpected response from PLC API");
         }
 
         const transformedData = transformMachineData(result.data);
@@ -136,10 +173,10 @@ const MachineStatus: React.FC = () => {
         setApiSummaryData(buildSummary(transformedData));
         setLastUpdated(new Date());
       } catch (error: any) {
-        console.error("Error fetching machine data:", error);
+        console.error("Error fetching PLC data:", error);
         toast({
           title: "Error",
-          description: "Failed to fetch machine data.",
+          description: "Failed to fetch PLC data.",
           status: "warning",
           duration: 3000,
           isClosable: true,
@@ -170,10 +207,14 @@ const MachineStatus: React.FC = () => {
 
   // Filter data based on selections
   const filteredData = machineData.filter((item) => {
-    if (selectedMachine !== "all" && item.deviceId !== selectedMachine)
+    if (selectedMachine !== "all" && item.machineKey !== selectedMachine)
       return false;
-    if (selectedShift !== "all" && item.shift !== selectedShift) return false;
-    if (selectedDesign !== "all" && item.design !== selectedDesign)
+    if (selectedBrand !== "all" && item.plcBrand !== selectedBrand)
+      return false;
+    // Filter by production status
+    if (selectedProtocol === "active" && item.productionActive !== 1)
+      return false;
+    if (selectedProtocol === "inactive" && item.productionActive !== 0)
       return false;
     if (selectedStatus !== "all" && item.status !== selectedStatus)
       return false;
@@ -182,22 +223,24 @@ const MachineStatus: React.FC = () => {
 
   // Prepare chart data
   const chartData = filteredData.map((item: any) => ({
-    time: item.timestamp,
-    count: item.count,
-    efficiency: item.efficiency,
-    errors: item.error1 + item.error2,
+    machine: item.deviceId,
+    temperature: item.temperature,
+    pressure: item.pressure,
+    rpm: item.rpm,
+    production: item.productionCount,
   }));
 
   // Get unique values for filters
-  const shifts = Array.from(
-    new Set(machineData.map((item: any) => item.shift))
-  );
-  const designs =
-    apiSummaryData?.designs ||
-    Array.from(new Set(machineData.map((item: any) => item.design)));
-  const availableDevices = Array.from(
-    new Set(machineData.map((item: any) => item.deviceId))
-  );
+  const brands =
+    apiSummaryData?.brands ||
+    Array.from(new Set(machineData.map((item: any) => item.plcBrand)));
+  const protocols =
+    apiSummaryData?.protocols ||
+    Array.from(new Set(machineData.map((item: any) => item.plcProtocol)));
+  const availableMachines = machineData.map((item: any) => ({
+    key: item.machineKey,
+    label: item.deviceId,
+  }));
 
   // Get status color scheme
   const getStatusColor = (status: string) => {
@@ -292,7 +335,7 @@ const MachineStatus: React.FC = () => {
               w="100px"
               isDisabled={!autoRefresh}
             >
-               <option value={3}>3s</option>
+              <option value={3}>3s</option>
               <option value={10}>10s</option>
               <option value={30}>30s</option>
               <option value={60}>1m</option>
@@ -355,13 +398,14 @@ const MachineStatus: React.FC = () => {
           >
             <CardBody>
               <Stat>
-                <StatLabel color="gray.600">Avg Efficiency</StatLabel>
+                <StatLabel color="gray.600">Avg Temperature</StatLabel>
                 <StatNumber color="green.600">
                   {isLoading
                     ? "..."
-                    : apiSummaryData?.avg_efficiency
-                    ? parseFloat(apiSummaryData.avg_efficiency).toFixed(2) + "%"
-                    : "0%"}
+                    : apiSummaryData?.avg_temperature
+                    ? parseFloat(apiSummaryData.avg_temperature).toFixed(1) +
+                      "°C"
+                    : "0°C"}
                 </StatNumber>
                 <StatHelpText>
                   <StatArrow type="increase" />
@@ -374,8 +418,8 @@ const MachineStatus: React.FC = () => {
           <Card
             flex="1"
             minW="200px"
-            bgGradient="linear(to-br, red.50, white)"
-            borderColor="red.100"
+            bgGradient="linear(to-br, cyan.50, white)"
+            borderColor="cyan.100"
             variant="outline"
             rounded="lg"
             boxShadow="sm"
@@ -384,13 +428,18 @@ const MachineStatus: React.FC = () => {
           >
             <CardBody>
               <Stat>
-                <StatLabel color="gray.600">Total Errors</StatLabel>
-                <StatNumber color="red.600">
-                  {isLoading ? "..." : apiSummaryData?.total_errors || "0"}
+                <StatLabel color="gray.600">Avg Pressure</StatLabel>
+                <StatNumber color="cyan.600">
+                  {isLoading
+                    ? "..."
+                    : apiSummaryData?.avg_pressure
+                    ? parseFloat(apiSummaryData.avg_pressure).toFixed(1) +
+                      " bar"
+                    : "0 bar"}
                 </StatNumber>
                 <StatHelpText>
-                  <StatArrow type="decrease" />
-                  {isLoading ? "Loading..." : "Error1 + Error2"}
+                  <StatArrow type="increase" />
+                  {isLoading ? "Loading..." : "Overall Average"}
                 </StatHelpText>
               </Stat>
             </CardBody>
@@ -439,38 +488,15 @@ const MachineStatus: React.FC = () => {
           >
             <CardBody>
               <Stat>
-                <StatLabel color="gray.600">Error 1 Count</StatLabel>
+                <StatLabel color="gray.600">Avg RPM</StatLabel>
                 <StatNumber color="orange.600">
-                  {isLoading ? "..." : apiSummaryData?.error1_count || "0"}
+                  {isLoading
+                    ? "..."
+                    : apiSummaryData?.avg_rpm?.toFixed(0) || "0"}
                 </StatNumber>
                 <StatHelpText>
-                  <StatArrow type="decrease" />
-                  {isLoading ? "Loading..." : "Type 1 Errors"}
-                </StatHelpText>
-              </Stat>
-            </CardBody>
-          </Card>
-
-          <Card
-            flex="1"
-            minW="200px"
-            bgGradient="linear(to-br, red.50, white)"
-            borderColor="red.100"
-            variant="outline"
-            rounded="lg"
-            boxShadow="sm"
-            _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}
-            transition="all 0.2s ease-in-out"
-          >
-            <CardBody>
-              <Stat>
-                <StatLabel color="gray.600">Error 2 Count</StatLabel>
-                <StatNumber color="red.600">
-                  {isLoading ? "..." : apiSummaryData?.error2_count || "0"}
-                </StatNumber>
-                <StatHelpText>
-                  <StatArrow type="decrease" />
-                  {isLoading ? "Loading..." : "Type 2 Errors"}
+                  <StatArrow type="increase" />
+                  {isLoading ? "Loading..." : "Overall Average"}
                 </StatHelpText>
               </Stat>
             </CardBody>
@@ -506,8 +532,8 @@ const MachineStatus: React.FC = () => {
           <Card
             flex="1"
             minW="200px"
-            bgGradient="linear(to-br, gray.50, white)"
-            borderColor="gray.200"
+            bgGradient="linear(to-br, yellow.50, white)"
+            borderColor="yellow.100"
             variant="outline"
             rounded="lg"
             boxShadow="sm"
@@ -516,16 +542,42 @@ const MachineStatus: React.FC = () => {
           >
             <CardBody>
               <Stat>
-                <StatLabel color="gray.600">Stopped/Idle</StatLabel>
-                <StatNumber color="gray.600">
+                <StatLabel color="gray.600">Idle</StatLabel>
+                <StatNumber color="yellow.600">
                   {isLoading
                     ? "..."
-                    : (apiSummaryData?.status_summary?.stopped || 0) +
-                      (apiSummaryData?.status_summary?.idle || 0)}
+                    : apiSummaryData?.status_summary?.idle || "0"}
                 </StatNumber>
                 <StatHelpText>
                   <StatArrow type="decrease" />
-                  {isLoading ? "Loading..." : "Inactive Machines"}
+                  {isLoading ? "Loading..." : "Idle Machines"}
+                </StatHelpText>
+              </Stat>
+            </CardBody>
+          </Card>
+
+          <Card
+            flex="1"
+            minW="200px"
+            bgGradient="linear(to-br, red.50, white)"
+            borderColor="red.100"
+            variant="outline"
+            rounded="lg"
+            boxShadow="sm"
+            _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}
+            transition="all 0.2s ease-in-out"
+          >
+            <CardBody>
+              <Stat>
+                <StatLabel color="gray.600">Stopped</StatLabel>
+                <StatNumber color="red.600">
+                  {isLoading
+                    ? "..."
+                    : apiSummaryData?.status_summary?.stopped || "0"}
+                </StatNumber>
+                <StatHelpText>
+                  <StatArrow type="decrease" />
+                  {isLoading ? "Loading..." : "Stopped Machines"}
                 </StatHelpText>
               </Stat>
             </CardBody>
@@ -536,39 +588,39 @@ const MachineStatus: React.FC = () => {
         <Card>
           <CardBody>
             <HStack spacing={4} wrap="wrap">
-              <Box>
+              {/* <Box>
                 <Text fontSize="sm" fontWeight="medium" color="gray.700" mb={2}>
-                  Device ID
+                  Machine
                 </Text>
                 <Select
                   value={selectedMachine}
                   onChange={(e) => setSelectedMachine(e.target.value)}
                   size="sm"
-                  w="150px"
+                  w="180px"
                 >
-                  <option value="all">All Devices</option>
-                  {availableDevices.map((device: string) => (
-                    <option key={device} value={device}>
-                      {device}
+                  <option value="all">All Machines</option>
+                  {availableMachines.map((machine: any) => (
+                    <option key={machine.key} value={machine.key}>
+                      {machine.label}
                     </option>
                   ))}
                 </Select>
-              </Box>
+              </Box> */}
 
               <Box>
                 <Text fontSize="sm" fontWeight="medium" color="gray.700" mb={2}>
-                  Shift
+                  Machine
                 </Text>
                 <Select
-                  value={selectedShift}
-                  onChange={(e) => setSelectedShift(e.target.value)}
+                  value={selectedBrand}
+                  onChange={(e) => setSelectedBrand(e.target.value)}
                   size="sm"
                   w="150px"
                 >
-                  <option value="all">All Shifts</option>
-                  {shifts.map((shift: string) => (
-                    <option key={shift} value={shift}>
-                      Shift {shift}
+                  <option value="all">All Brands</option>
+                  {brands.map((brand: string) => (
+                    <option key={brand} value={brand}>
+                      {brand}
                     </option>
                   ))}
                 </Select>
@@ -576,26 +628,23 @@ const MachineStatus: React.FC = () => {
 
               <Box>
                 <Text fontSize="sm" fontWeight="medium" color="gray.700" mb={2}>
-                  Design
+                  Production Status
                 </Text>
                 <Select
-                  value={selectedDesign}
-                  onChange={(e) => setSelectedDesign(e.target.value)}
+                  value={selectedProtocol}
+                  onChange={(e) => setSelectedProtocol(e.target.value)}
                   size="sm"
                   w="150px"
                 >
-                  <option value="all">All Designs</option>
-                  {designs.map((design: string) => (
-                    <option key={design} value={design}>
-                      {design}
-                    </option>
-                  ))}
+                  <option value="all">All</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
                 </Select>
               </Box>
 
               <Box>
                 <Text fontSize="sm" fontWeight="medium" color="gray.700" mb={2}>
-                  Status
+                  Running Status
                 </Text>
                 <Select
                   value={selectedStatus}
@@ -607,7 +656,6 @@ const MachineStatus: React.FC = () => {
                   <option value="running">Running</option>
                   <option value="idle">Idle</option>
                   <option value="stopped">Stopped</option>
-                  <option value="maintenance">Maintenance</option>
                 </Select>
               </Box>
             </HStack>
@@ -616,33 +664,25 @@ const MachineStatus: React.FC = () => {
 
         {/* Charts */}
         <HStack spacing={6} align="stretch">
-          {/* Count Chart */}
+          {/* Production & Temperature Chart */}
           <Card flex="2">
             <CardBody>
               <Heading size="md" mb={4}>
-                Count Over Time
+                Machine Metrics
               </Heading>
               <Box height="300px">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData}>
+                  <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
                     <XAxis
-                      dataKey="time"
+                      dataKey="machine"
                       stroke="#718096"
                       fontSize={12}
                       angle={-45}
                       textAnchor="end"
                       height={80}
                     />
-                    <YAxis
-                      stroke="#718096"
-                      fontSize={12}
-                      label={{
-                        value: "Count",
-                        angle: -90,
-                        position: "insideLeft",
-                      }}
-                    />
+                    <YAxis stroke="#718096" fontSize={12} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "white",
@@ -651,40 +691,42 @@ const MachineStatus: React.FC = () => {
                       }}
                     />
                     <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="count"
-                      stroke="#3182CE"
-                      strokeWidth={2}
-                      dot={{ fill: "#3182CE", strokeWidth: 2, r: 4 }}
-                      name="Count"
+                    <Bar
+                      dataKey="production"
+                      fill="#3182CE"
+                      name="Production Count"
                     />
-                  </LineChart>
+                    <Bar
+                      dataKey="temperature"
+                      fill="#E53E3E"
+                      name="Temperature (°C)"
+                    />
+                  </BarChart>
                 </ResponsiveContainer>
               </Box>
             </CardBody>
           </Card>
 
-          {/* Efficiency Chart */}
+          {/* RPM & Pressure Chart */}
           <Card flex="1">
             <CardBody>
               <Heading size="md" mb={4}>
-                Efficiency vs Errors
+                RPM & Pressure
               </Heading>
               <Box height="300px">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                    <XAxis dataKey="time" stroke="#718096" fontSize={12} />
+                    <XAxis dataKey="machine" stroke="#718096" fontSize={12} />
                     <YAxis stroke="#718096" fontSize={12} />
                     <Tooltip />
                     <Legend />
+                    <Bar dataKey="rpm" fill="#38A169" name="RPM" />
                     <Bar
-                      dataKey="efficiency"
-                      fill="#38A169"
-                      name="Efficiency %"
+                      dataKey="pressure"
+                      fill="#805AD5"
+                      name="Pressure (bar)"
                     />
-                    <Bar dataKey="errors" fill="#E53E3E" name="Errors" />
                   </BarChart>
                 </ResponsiveContainer>
               </Box>
@@ -696,7 +738,7 @@ const MachineStatus: React.FC = () => {
         <Card>
           <CardBody>
             <Heading size="md" mb={4}>
-              Machine Performance Data
+              PLC Machine Data (Latest per Machine)
             </Heading>
             {isLoading ? (
               <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
@@ -712,34 +754,10 @@ const MachineStatus: React.FC = () => {
                         >
                           Loading...
                         </Text>
-                        <Box mb={3}>
-                          <Text fontSize="xs" color="gray.300" mb={1}>
-                            Timestamp
-                          </Text>
-                          <Text
-                            fontSize="sm"
-                            fontWeight="medium"
-                            color="gray.300"
-                          >
-                            Loading...
-                          </Text>
-                        </Box>
-                        <Box mb={3}>
-                          <Text fontSize="xs" color="gray.300" mb={1}>
-                            Design
-                          </Text>
-                          <Text
-                            fontSize="sm"
-                            fontWeight="medium"
-                            color="gray.300"
-                          >
-                            Loading...
-                          </Text>
-                        </Box>
                         <SimpleGrid columns={2} spacing={3} mb={3}>
                           <Box>
                             <Text fontSize="xs" color="gray.300" mb={1}>
-                              Count
+                              Temperature
                             </Text>
                             <Text
                               fontSize="lg"
@@ -751,15 +769,15 @@ const MachineStatus: React.FC = () => {
                           </Box>
                           <Box>
                             <Text fontSize="xs" color="gray.300" mb={1}>
-                              Efficiency
+                              Pressure
                             </Text>
-                            <Badge
-                              colorScheme="gray"
-                              variant="subtle"
-                              fontSize="sm"
+                            <Text
+                              fontSize="lg"
+                              fontWeight="bold"
+                              color="gray.300"
                             >
                               Loading...
-                            </Badge>
+                            </Text>
                           </Box>
                         </SimpleGrid>
                       </Box>
@@ -782,13 +800,30 @@ const MachineStatus: React.FC = () => {
                     transition="all 0.2s ease-in-out"
                   >
                     <CardBody p={4} bgGradient={getStatusGradient(item.status)}>
-                      {/* Header with Device ID, Status, and Shift */}
-                      <Flex justify="space-between" align="center" mb={3}>
-                        <Text fontSize="lg" fontWeight="bold" color="blue.700">
-                          {item.deviceId}
-                        </Text>
+                      {/* Header with Device ID and Status */}
+                      {/* Header with Device ID, PLC info and Status */}
+                      <Flex justify="space-between" align="flex-start" mb={3}>
+                        {/* Left: Device + PLC Info */}
+                        <VStack align="start" spacing={0.5}>
+                          <Text
+                            fontSize="lg"
+                            fontWeight="bold"
+                            color="blue.700"
+                          >
+                            {item.deviceId}
+                          </Text>
+
+                          <Text
+                            fontSize="sm"
+                            fontWeight="medium"
+                            color="gray.600"
+                          >
+                            {item.plcModel}
+                          </Text>
+                        </VStack>
+
+                        {/* Right: Status & Protocol */}
                         <VStack spacing={1} align="end">
-                          {/* Machine Status with real-time indicator */}
                           <HStack spacing={2}>
                             <Box
                               w={2}
@@ -812,21 +847,13 @@ const MachineStatus: React.FC = () => {
                               {item.status}
                             </Badge>
                           </HStack>
-                          {/* Shift Badge */}
+
                           <Badge
-                            colorScheme={
-                              item.shift === "A"
-                                ? "green"
-                                : item.shift === "B"
-                                ? "blue"
-                                : item.shift === "C"
-                                ? "purple"
-                                : "gray"
-                            }
+                            colorScheme="purple"
                             variant="subtle"
                             size="sm"
                           >
-                            Shift {item.shift}
+                            {item.plcProtocol}
                           </Badge>
                         </VStack>
                       </Flex>
@@ -834,91 +861,141 @@ const MachineStatus: React.FC = () => {
                       {/* Timestamp */}
                       <Box mb={3}>
                         <Text fontSize="xs" color="gray.500" mb={1}>
-                          Timestamp
+                          Last Updated
                         </Text>
                         <Text fontSize="sm" fontWeight="medium">
                           {item.timestamp}
                         </Text>
                       </Box>
 
-                      {/* Design */}
-                      <Box mb={3}>
+                      {/* PLC Info */}
+                      {/* <Box mb={3}>
                         <Text fontSize="xs" color="gray.500" mb={1}>
-                          Design
+                          PLC Model
                         </Text>
                         <Badge
                           colorScheme="cyan"
                           variant="subtle"
                           fontSize="sm"
                         >
-                          {item.design}
+                          {item.plcBrand} {item.plcModel}
                         </Badge>
-                      </Box>
+                      </Box> */}
 
                       {/* Performance Metrics */}
                       <SimpleGrid columns={2} spacing={3} mb={3}>
                         <Box>
                           <Text fontSize="xs" color="gray.500" mb={1}>
-                            Count
+                            Production Count
                           </Text>
                           <Text
                             fontSize="lg"
                             fontWeight="bold"
                             color="teal.600"
                           >
-                            {item.count}
+                            {item.productionCount}
                           </Text>
                         </Box>
                         <Box>
                           <Text fontSize="xs" color="gray.500" mb={1}>
-                            Efficiency
+                            RPM
+                          </Text>
+                          <Badge
+                            colorScheme="blue"
+                            variant="solid"
+                            fontSize="sm"
+                            rounded="full"
+                            px={2}
+                          >
+                            {item.rpm}
+                          </Badge>
+                        </Box>
+                      </SimpleGrid>
+
+                      {/* Temperature & Pressure */}
+                      <SimpleGrid columns={2} spacing={3} mb={3}>
+                        <Box>
+                          <Text fontSize="xs" color="gray.500" mb={1}>
+                            Temperature
                           </Text>
                           <Badge
                             colorScheme={
-                              item.efficiency >= 90
-                                ? "green"
-                                : item.efficiency >= 80
+                              item.temperature >= 60
+                                ? "red"
+                                : item.temperature >= 45
                                 ? "yellow"
-                                : "red"
+                                : "green"
                             }
                             variant="solid"
                             fontSize="sm"
                             rounded="full"
                             px={2}
                           >
-                            {parseFloat(item.efficiency || 0).toFixed(1)}%
+                            {parseFloat(item.temperature || 0).toFixed(1)}°C
+                          </Badge>
+                        </Box>
+                        <Box>
+                          <Text fontSize="xs" color="gray.500" mb={1}>
+                            Pressure
+                          </Text>
+                          <Badge
+                            colorScheme="purple"
+                            variant="solid"
+                            fontSize="sm"
+                            rounded="full"
+                            px={2}
+                          >
+                            {item.pressure} bar
                           </Badge>
                         </Box>
                       </SimpleGrid>
 
-                      {/* Error Metrics */}
+                      {/* Motor & Production Status */}
                       <Box>
                         <Text fontSize="xs" color="gray.500" mb={2}>
-                          Error Status
+                          System Status
                         </Text>
                         <HStack spacing={4}>
                           <Box textAlign="center">
                             <Text fontSize="xs" color="gray.500">
-                              Error 1
+                              Motor
                             </Text>
                             <Badge
-                              colorScheme={item.error1 === 0 ? "green" : "red"}
+                              colorScheme={
+                                item.motorStatus === 1 ? "green" : "red"
+                              }
                               variant="solid"
                               size="sm"
                             >
-                              {item.error1}
+                              {item.motorStatus === 1 ? "ON" : "OFF"}
                             </Badge>
                           </Box>
                           <Box textAlign="center">
                             <Text fontSize="xs" color="gray.500">
-                              Error 2
+                              Production
                             </Text>
                             <Badge
-                              colorScheme={item.error2 === 0 ? "green" : "red"}
+                              colorScheme={
+                                item.productionActive === 1 ? "green" : "red"
+                              }
                               variant="solid"
                               size="sm"
                             >
-                              {item.error2}
+                              {item.productionActive === 1
+                                ? "Active"
+                                : "Inactive"}
+                            </Badge>
+                          </Box>
+                          <Box textAlign="center">
+                            <Text fontSize="xs" color="gray.500">
+                              PLC
+                            </Text>
+                            <Badge
+                              colorScheme={item.plcRunning ? "green" : "red"}
+                              variant="solid"
+                              size="sm"
+                            >
+                              {item.plcRunning ? "Running" : "Stopped"}
                             </Badge>
                           </Box>
                         </HStack>
