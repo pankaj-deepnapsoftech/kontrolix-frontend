@@ -49,7 +49,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
       { Header: "Email", accessor: "email" },
       { Header: "Phone", accessor: "phone" },
       { 
-        Header: "Role", 
+        Header: "Machine Role", 
         accessor: "role",
         Cell: ({ value }: { value: any }) => {
           if (typeof value === 'object' && value !== null && value.name) {

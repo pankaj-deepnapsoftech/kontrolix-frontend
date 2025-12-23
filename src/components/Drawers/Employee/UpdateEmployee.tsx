@@ -206,7 +206,7 @@ const UpdateEmployee: React.FC<UpdateEmployeeProps> = ({
 
               <FormControl className="mt-3 mb-5" isRequired>
                 <FormLabel fontWeight="bold" color="gray.700">
-                  Role
+                  Machine Role
                 </FormLabel>
                 <Select
                   required

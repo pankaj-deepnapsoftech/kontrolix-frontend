@@ -79,6 +79,10 @@ const AddResource = ({
   const [selectedType, setSelectedType] = useState(null);
   const [showNewTypeInput, setShowNewTypeInput] = useState(false);
   const [newType, setNewType] = useState("");
+  const [brandOptions, setBrandOptions] = useState<{ value: string; label: string }[]>([]);
+  const [selectedName, setSelectedName] = useState<any>(null);
+  const [showNewNameInput, setShowNewNameInput] = useState(false);
+  const [newName, setNewName] = useState("");
 
   const handleAddNewType = () => {
     const trimmedType = newType.trim().toLowerCase();
@@ -101,6 +105,25 @@ const AddResource = ({
     setNewType("");
     setShowNewTypeInput(false);
     toast.success(`Type "${trimmedType}" added.`);
+  };
+  const handleAddNewName = () => {
+    const trimmedName = newName.trim();
+    if (!trimmedName) {
+      toast.warning("Name cannot be empty.");
+      return;
+    }
+    const exists = brandOptions.some((opt) => opt.value.toLowerCase() === trimmedName.toLowerCase());
+    if (exists) {
+      toast.warning("This name already exists.");
+      return;
+    }
+    const newOption = { value: trimmedName, label: trimmedName };
+    setBrandOptions((prev) => [...prev, newOption]);
+    setSelectedName(newOption);
+    formik.setFieldValue("name", trimmedName);
+    setNewName("");
+    setShowNewNameInput(false);
+    toast.success(`Name "${trimmedName}" added.`);
   };
 
   const formik = useFormik({
@@ -178,6 +201,35 @@ const AddResource = ({
         setSelectedType(newOption);
       }
     }
+    // Fetch PLC brands for Name dropdown
+    (async () => {
+      try {
+        const resp = await fetch(process.env.REACT_APP_BACKEND_URL + "plc/brands", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+        });
+        const json = await resp.json();
+        if (!json.success) {
+          throw new Error(json.message || "Failed to fetch PLC brands");
+        }
+        const opts = (json.data || []).map((b: string) => ({ value: b, label: b }));
+        setBrandOptions(opts);
+        if (editResource?.name) {
+          const m = opts.find((o) => o.value.toLowerCase() === editResource.name.toLowerCase());
+          if (m) {
+            setSelectedName(m);
+          } else {
+            const custom = { value: editResource.name, label: editResource.name };
+            setBrandOptions((prev) => [...prev, custom]);
+            setSelectedName(custom);
+          }
+        }
+      } catch (err: any) {
+        // silent fail, user can still type manually
+      }
+    })();
   }, [editResource]);
 
   return (
@@ -302,21 +354,72 @@ const AddResource = ({
             <FormLabel fontWeight="bold" color="gray.700">
               Name
             </FormLabel>
-            <Input
+            <Select
+              className="rounded mt-2 border"
+              placeholder="Select Name"
               name="name"
-              value={formik.values.name}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              type="text"
-              placeholder="Name"
-              bg="white"
-              borderColor="gray.300"
-              _focus={{
-                borderColor: "blue.500",
-                boxShadow: "0 0 0 1px #3182ce",
+              value={selectedName}
+              options={[...brandOptions, { value: "__add_new__", label: "+ Add New Name" }]}
+              styles={customStyles}
+              onChange={(selected: any) => {
+                if (selected?.value === "__add_new__") {
+                  setShowNewNameInput(true);
+                } else {
+                  setSelectedName(selected);
+                  formik.setFieldValue("name", selected?.value || "");
+                }
               }}
-              _placeholder={{ color: "gray.500" }}
+              onBlur={formik.handleBlur}
             />
+            {showNewNameInput && (
+              <div className="mt-3 p-4 border border-gray-300 rounded-lg bg-gray-50">
+                <FormLabel
+                  fontSize="sm"
+                  fontWeight="bold"
+                  color="gray.700"
+                  mb={2}
+                >
+                  Add New Name
+                </FormLabel>
+                <div className="flex gap-2">
+                  <Input
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="Enter new name (e.g. Omron)"
+                    size="sm"
+                    bg="white"
+                    borderColor="gray.300"
+                    _focus={{
+                      borderColor: "blue.500",
+                      boxShadow: "0 0 0 1px #3182ce",
+                    }}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        handleAddNewName();
+                      }
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    colorScheme="blue"
+                    onClick={handleAddNewName}
+                    disabled={!newName.trim()}
+                  >
+                    Add
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setShowNewNameInput(false);
+                      setNewName("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
           </FormControl>
 
           {/* Specification */}
