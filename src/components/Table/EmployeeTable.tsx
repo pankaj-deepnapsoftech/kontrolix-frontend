@@ -402,10 +402,16 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                                       d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                                     />
                                   </svg>
-                                  {(row.original?.role &&
-                                    row.original.role.role) ||
-                                    (row.original.isSuper && "Super Admin") ||
-                                    "No Role"}
+                                  {row.original.isSuper
+                                    ? "Super Admin"
+                                    : (() => {
+                                        const r = row.original?.role;
+                                        if (!r) return "No Role";
+                                        if (typeof r === "object") {
+                                          return r.name || r.role || r.label || "No Role";
+                                        }
+                                        return r || "No Role";
+                                      })()}
                                 </span>
                               ) : (
                                 cell.render("Cell")
