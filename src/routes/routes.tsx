@@ -44,7 +44,7 @@ import Dispatch from "../pages/Dispatch";
 import Parties from "../pages/Parties";
 import { IoIosPeople } from "react-icons/io";
 import Task from "../pages/Task";
-import { 
+import {
   Box,
   Calendar,
   Component,
@@ -138,7 +138,7 @@ const routes = [
     icon: <SlDirection />,
     path: "product",
     element: <Products />,
-    isSublink: false
+    isSublink: false,
   },
   //   {
   //     name: "Merchant",
@@ -332,5 +332,3 @@ const routes = [
 ];
 
 export default routes;
-
-
