@@ -11,8 +11,7 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { FaHistory } from "react-icons/fa"; // Importing the icon
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import moment from "moment";
 import { useMemo, useState } from "react";
 import { FaCaretDown, FaCaretUp } from "react-icons/fa";
@@ -64,6 +63,11 @@ const ProductTable: React.FC<ProductTableProps> = ({
         Cell: ({ value }: { value: string }) => capitalizeWords(value),
       },
       {
+        Header: "Resource",
+        accessor: "resource",
+        Cell: ({ value }: { value: any }) => capitalizeWords(value?.name) || "N/A",
+      },
+      {
         Header: "Category",
         accessor: "category",
         Cell: ({ value }: { value: string }) => capitalizeWords(value),
@@ -75,9 +79,8 @@ const ProductTable: React.FC<ProductTableProps> = ({
       },
       { Header: "Product/Service", accessor: "product_or_service" },
       { Header: "UOM", accessor: "uom" },
-      { Header: "Price", accessor: "price" },
-      { Header: "Latest Price", accessor: "latest_price" },
-      { Header: "Current stock", accessor: "current_stock" },
+
+     
       { Header: "Last Change", accessor: "change" },
       { Header: "Min stock", accessor: "min_stock" },
       { Header: "Max stock", accessor: "max_stock" },
@@ -89,10 +92,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
   const [showDeletePage, setshowDeletePage] = useState(false);
   const [deleteId, setdeleteId] = useState("");
 
-  // State for latest price history update
-  const [isLatestPriceModalOpen, setIsLatestPriceModalOpen] = useState<string | null>(null); // Track product ID for open modal
-  // const [priceHistory, setPriceHistory] = useState([]);
-  const modalRef = useRef<HTMLDivElement>(null); // Ref for positioning
+
 
   // Bulk selection states
   const [selectedProducts, setSelectedProducts] = useState([]);
@@ -141,10 +141,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
     }
   };
 
-  // Function to toggle the price history modal for a specific product
-  const toggleModal = (productId: string) => {
-    setIsLatestPriceModalOpen(isLatestPriceModalOpen === productId ? null : productId);
-  };
+
 
   const handleBulkDelete = async () => {
     if (
@@ -405,8 +402,9 @@ const ProductTable: React.FC<ProductTableProps> = ({
                       className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
                       style={{ color: colors.table.headerText }}
                     >
-                      Current Stock 
+                      Resource
                     </th>
+
                     <th
                       className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
                       style={{ color: colors.table.headerText }}
@@ -503,83 +501,15 @@ const ProductTable: React.FC<ProductTableProps> = ({
                         >
                           {capitalizeWords(row.original.name) || "N/A"}
                         </td>
-                        <td className="px-4 py-3 text-sm whitespace-nowrap relative">
-                          <div className="flex flex-col">
-                            <span
-                              className="font-medium"
-                              style={{ color: colors.success[600] }}
-                            >
-                              ₹{row.original.price || "0"}
-                            </span>
-                            {row.original.latest_price &&
-                              row.original.latest_price !==
-                                row.original.price && (
-                                <div className="flex items-center">
-                                  <FaHistory
-                                    onClick={() => toggleModal(row.original._id)}
-                                    style={{
-                                      marginRight: "3px",
-                                      marginTop: "1px",
-                                      fontSize: "12px",
-                                      cursor: "pointer",
-                                    }}
-                                  />
-                                  <span
-                                    className="text-xs font-medium"
-                                    style={{ color: colors.primary[600] }}
-                                  >
-                                    Latest: ₹
-                                    {row.original.latest_price.toFixed(2)}
-                                  </span>
-                                  {isLatestPriceModalOpen === row.original._id && (
-                                    <div
-                                      ref={modalRef}
-                                      className="absolute top-full left-0 mt-1 bg-white p-4 shadow-lg w-64 z-50"
-                                      style={{
-                                        border: `1px solid ${colors.border.light}`,
-                                      }}
-                                    >
-                                      <h3
-                                        className="text-sm font-semibold mb-1"
-                                        style={{ color: colors.text.primary }}
-                                      >
-                                        Recent Price History
-                                      </h3>
-                                      <ul className="text-sm">
-                                        {row.original.price_history &&
-                                        row.original.price_history.length > 0 ? (
-                                          row.original.price_history
-                                            .slice(0, 5)
-                                            .map((history, index) => (
-                                              <li key={index} className="mb-1">
-                                                <span
-                                                  className="font-medium"
-                                                  style={{
-                                                    color: colors.text.secondary,
-                                                  }}
-                                                >
-                                                  {moment(history.updated_at).format(
-                                                    "DD/MM/YYYY HH:mm"
-                                                  )}
-                                                  :
-                                                </span>{" "}
-                                                ₹{Math.round(history.price).toFixed(2)}
-                                              </li>
-                                            ))
-                                        ) : (
-                                          <li
-                                            style={{ color: colors.text.muted }}
-                                          >
-                                            No price history available
-                                          </li>
-                                        )}
-                                      </ul>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                          </div>
+                        <td
+                          className="px-4 py-3 text-sm whitespace-nowrap"
+                          style={{ color: colors.text.secondary }}
+                        >
+                          {row.original.resource?.name
+                            ? capitalizeWords(row.original.resource.name)
+                            : "N/A"}
                         </td>
+
                         <td
                           className="px-4 py-3 text-sm whitespace-nowrap"
                           style={{ color: colors.text.secondary }}
