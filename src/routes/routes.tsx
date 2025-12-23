@@ -137,7 +137,7 @@ const routes = [
     name: "Product",
     icon: <SlDirection />,
     path: "product",
-    element: <AddProduct />,
+    element: <Products />,
     isSublink: false
   },
   //   {

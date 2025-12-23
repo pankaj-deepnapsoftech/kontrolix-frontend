@@ -397,9 +397,7 @@ const MachineStatus: React.FC = () => {
             bgGradient="linear(to-br, blue.50, white)"
             borderColor="blue.100"
             variant="outline"
-            rounded="lg"
-            boxShadow="sm"
-            _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}
+            _hover={{ transform: "translateY(-4px)" }}
             transition="all 0.2s ease-in-out"
           >
             <CardBody>
@@ -424,9 +422,8 @@ const MachineStatus: React.FC = () => {
             bgGradient="linear(to-br, green.50, white)"
             borderColor="green.100"
             variant="outline"
-            rounded="lg"
-            boxShadow="sm"
-            _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}
+          
+            _hover={{ transform: "translateY(-4px)" }}
             transition="all 0.2s ease-in-out"
           >
             <CardBody>
@@ -454,9 +451,7 @@ const MachineStatus: React.FC = () => {
             bgGradient="linear(to-br, cyan.50, white)"
             borderColor="cyan.100"
             variant="outline"
-            rounded="lg"
-            boxShadow="sm"
-            _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}
+            _hover={{ transform: "translateY(-4px)"}}
             transition="all 0.2s ease-in-out"
           >
             <CardBody>
@@ -484,9 +479,7 @@ const MachineStatus: React.FC = () => {
             bgGradient="linear(to-br, purple.50, white)"
             borderColor="purple.100"
             variant="outline"
-            rounded="lg"
-            boxShadow="sm"
-            _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}
+            _hover={{ transform: "translateY(-4px)"}}
             transition="all 0.2s ease-in-out"
           >
             <CardBody>
@@ -514,9 +507,7 @@ const MachineStatus: React.FC = () => {
             bgGradient="linear(to-br, orange.50, white)"
             borderColor="orange.100"
             variant="outline"
-            rounded="lg"
-            boxShadow="sm"
-            _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}
+            _hover={{ transform: "translateY(-4px)" }}
             transition="all 0.2s ease-in-out"
           >
             <CardBody>
@@ -541,9 +532,7 @@ const MachineStatus: React.FC = () => {
             bgGradient="linear(to-br, green.50, white)"
             borderColor="green.100"
             variant="outline"
-            rounded="lg"
-            boxShadow="sm"
-            _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}
+            _hover={{ transform: "translateY(-4px)" }}
             transition="all 0.2s ease-in-out"
           >
             <CardBody>
@@ -568,9 +557,7 @@ const MachineStatus: React.FC = () => {
             bgGradient="linear(to-br, yellow.50, white)"
             borderColor="yellow.100"
             variant="outline"
-            rounded="lg"
-            boxShadow="sm"
-            _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}
+            _hover={{ transform: "translateY(-4px)" }}
             transition="all 0.2s ease-in-out"
           >
             <CardBody>
@@ -595,9 +582,7 @@ const MachineStatus: React.FC = () => {
             bgGradient="linear(to-br, red.50, white)"
             borderColor="red.100"
             variant="outline"
-            rounded="lg"
-            boxShadow="sm"
-            _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}
+            _hover={{ transform: "translateY(-4px)" }}
             transition="all 0.2s ease-in-out"
           >
             <CardBody>
@@ -827,9 +812,8 @@ const MachineStatus: React.FC = () => {
                     size="sm"
                     borderLeftWidth="6px"
                     borderLeftColor={getStatusBorderColor(item.status)}
-                    rounded="md"
-                    boxShadow="md"
-                    _hover={{ boxShadow: "xl", transform: "translateY(-3px)" }}
+                  
+                    _hover={{ transform: "translateY(-3px)" }}
                     transition="all 0.2s ease-in-out"
                   >
                     <CardBody p={4} bgGradient={getStatusGradient(item.status)}>
@@ -948,7 +932,6 @@ const MachineStatus: React.FC = () => {
                             colorScheme="blue"
                             variant="solid"
                             fontSize="sm"
-                            rounded="full"
                             px={2}
                           >
                             {item.rpm}
@@ -972,7 +955,6 @@ const MachineStatus: React.FC = () => {
                             }
                             variant="solid"
                             fontSize="sm"
-                            rounded="full"
                             px={2}
                           >
                             {parseFloat(item.temperature || 0).toFixed(1)}°C
@@ -986,7 +968,6 @@ const MachineStatus: React.FC = () => {
                             colorScheme="purple"
                             variant="solid"
                             fontSize="sm"
-                            rounded="full"
                             px={2}
                           >
                             {item.pressure} bar

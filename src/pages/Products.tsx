@@ -23,12 +23,12 @@ import {
   openUpdateProductDrawer,
 } from "../redux/reducers/drawersSlice";
 // import AddProduct from "../components/Drawers/Product/AddIndirectProduct";
-import UpdateProduct from "../components/Drawers/Product/UpdateProduct";
-import ProductDetails from "../components/Drawers/Product/ProductDetails";
+// import UpdateProduct from "../components/Drawers/Product/UpdateProduct";
+// import ProductDetails from "../components/Drawers/Product/ProductDetails";
 import { FiDownload, FiSearch } from "react-icons/fi";
 import { colors } from "../theme/colors";
 import { Package } from "lucide-react";
-import AddProduct from "../components/Drawers/Product/AddDirectProduct";
+import AddProduct from "../components/Drawers/Product/AddProduct";
 import * as XLSX from "xlsx";
 
 const Products: React.FC = () => {
@@ -398,25 +398,25 @@ const Products: React.FC = () => {
         />
       )}
       {/* Update Product Drawer */}
-      {isUpdateProductDrawerOpened && (
+      {/* {isUpdateProductDrawerOpened && (
         <UpdateProduct
           closeDrawerHandler={closeUpdateProductDrawerHandler}
           productId={productId}
           fetchProductsHandler={fetchProductsHandler}
         />
-      )}
+      )} */}
       {/* Product Details Drawer */}
-      {isProductDetailsDrawerOpened && (
+      {/* {isProductDetailsDrawerOpened && (
         <ProductDetails
           closeDrawerHandler={closeProductDetailsDrawerHandler}
           productId={productId}
         />
-      )}
+      )} */}
 
       <div className="p-2 lg:p-3">
         {/* Header Section */}
         <div
-          className="rounded-xl shadow-sm border border-gray-100 p-6 mb-6"
+          className=" shadow-sm border border-gray-100 p-6 mb-6"
           style={{
             backgroundColor: colors.background.card,
             borderColor: colors.border.light,
@@ -424,7 +424,7 @@ const Products: React.FC = () => {
         >
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-2.5 rounded-lg shadow">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-2.5  shadow">
                 <Package className="text-white" />
               </div>
               <div>
@@ -448,7 +448,7 @@ const Products: React.FC = () => {
               {/* Add Product */}
               <button
                 onClick={openAddProductDrawerHandler}
-                className="inline-flex items-center gap-1.5 px-3 py-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-2 whitespace-nowrap  text-sm font-medium transition-colors"
                 style={{
                   backgroundColor: colors.button.primary,
                   color: colors.text.inverse,
@@ -464,50 +464,9 @@ const Products: React.FC = () => {
                 <MdAdd size="16px" />
                 Add Product
               </button>
-
-              {/* Refresh */}
-
-              {/* Export Excel */}
-              <button
-                onClick={exportToExcelHandler}
-                disabled={isExporting}
-                className="flex items-center gap-1 px-3 py-2 text-white font-medium rounded-md transition-all duration-150 hover:shadow focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  backgroundColor: colors.success[600],
-                }}
-                onMouseEnter={(e) => {
-                  if (!isExporting)
-                    e.currentTarget.style.backgroundColor = colors.success[700];
-                }}
-                onMouseLeave={(e) => {
-                  if (!isExporting)
-                    e.currentTarget.style.backgroundColor = colors.success[600];
-                }}
-              >
-                <FiDownload size={16} />
-                {isExporting ? "Exporting..." : "Export Excel"}
-              </button>
-
-              {/* Bulk Upload */}
-              <button
-                onClick={() => setShowBulkUploadMenu(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-2 whitespace-nowrap rounded-md text-sm font-medium text-white transition-colors"
-                style={{
-                  backgroundColor: colors.warning[600],
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = colors.warning[700];
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = colors.warning[600];
-                }}
-              >
-                <AiFillFileExcel size="16px" />
-                Bulk Upload
-              </button>
               <button
                 onClick={fetchProductsHandler}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium border transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-2  text-sm font-medium border transition-colors"
                 style={{
                   borderColor: colors.border.medium,
                   color: colors.text.primary,
@@ -543,7 +502,7 @@ const Products: React.FC = () => {
                   style={{ color: colors.text.secondary }}
                 />
                 <input
-                  className="w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-3 transition-colors"
+                  className="w-full pl-10 pr-4 py-2.5 border  focus:outline-none focus:ring-3 transition-colors"
                   style={{
                     backgroundColor: colors.input.background,
                     borderColor: colors.input.border,
@@ -564,61 +523,6 @@ const Products: React.FC = () => {
                 />
               </div>
             </div>
-
-            {/* Products/Services Filter */}
-            <div className="w-full lg:w-48">
-              <label
-                className="block text-sm font-medium mb-2"
-                style={{ color: colors.text.primary }}
-              >
-                Type
-              </label>
-              <select
-                value={productTypeFilter}
-                onChange={(e) => setProductTypeFilter(e.target.value)}
-                className="w-full px-3 py-2.5 border rounded-lg focus:outline-none focus:ring-3 transition-colors"
-                style={{
-                  backgroundColor: colors.input.background,
-                  borderColor: colors.input.border,
-                  color: colors.text.primary,
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = colors.input.borderFocus;
-                  e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.primary[100]}`;
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = colors.input.border;
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-              >
-                <option value="">All Type</option>
-                <option value="finished goods">Finished Goods</option>
-                <option value="raw materials">Raw Materials</option>
-                <option value="semi finished goods">Semi Finished Goods</option>
-                <option value="consumables">Consumables</option>
-                <option value="bought out parts">Bought Out Parts</option>
-                <option value="trading goods">Trading Goods</option>
-                <option value="service">Service</option>
-              </select>
-            </div>
-
-            {/* Store Filter */}
-            <div className="w-full lg:w-48">
-              <label
-                className="block text-sm font-medium mb-2"
-                style={{ color: colors.text.primary }}
-              >
-                Store
-              </label>
-              <Select
-                styles={customSelectStyles}
-                options={storeOptions}
-                value={storeFilter}
-                onChange={(d: any) => setStoreFilter(d)}
-                placeholder="Select store..."
-                isClearable
-              />
-            </div>
           </div>
         </div>
 
@@ -626,7 +530,7 @@ const Products: React.FC = () => {
         {showBulkUploadMenu && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div
-              className="rounded-xl shadow-xl max-w-md w-full p-6"
+              className=" shadow-xl max-w-md w-full p-6"
               style={{ backgroundColor: colors.background.card }}
             >
               <div className="flex items-center justify-between mb-4">
@@ -638,7 +542,7 @@ const Products: React.FC = () => {
                 </h3>
                 <button
                   onClick={() => setShowBulkUploadMenu(false)}
-                  className="p-1 rounded-lg transition-colors"
+                  className="p-1  transition-colors"
                   style={{ color: colors.text.secondary }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = colors.gray[100];
@@ -663,7 +567,7 @@ const Products: React.FC = () => {
                     ref={fileRef}
                     type="file"
                     accept=".csv, .xlsx, .xls"
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-3 transition-colors"
+                    className="w-full px-3 py-2 border  focus:outline-none focus:ring-3 transition-colors"
                     style={{
                       backgroundColor: colors.input.background,
                       borderColor: colors.input.border,
@@ -683,7 +587,7 @@ const Products: React.FC = () => {
                   <button
                     type="submit"
                     disabled={bulkUploading}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2  font-medium transition-colors disabled:opacity-50"
                     style={{
                       backgroundColor: colors.button.primary,
                       color: colors.text.inverse,
@@ -696,7 +600,7 @@ const Products: React.FC = () => {
                   <button
                     type="button"
                     onClick={downloadSampleTemplate}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium border transition-colors"
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2  font-medium border transition-colors"
                     style={{
                       borderColor: colors.border.medium,
                       color: colors.text.primary,
@@ -714,7 +618,7 @@ const Products: React.FC = () => {
 
         {/* Table Section */}
         <div
-          className="rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+          className=" shadow-sm border border-gray-100 overflow-hidden"
           style={{
             backgroundColor: colors.background.card,
             borderColor: colors.border.light,
