@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import { useFormik } from "formik";
 import axios from "axios";
 import { useCookies } from "react-cookie";
+import { useAddProductMutation } from "../../../redux/api/api";
 
 interface Resource {
   _id: string;
@@ -71,6 +72,7 @@ const AddProduct = ({
 }: AddProductProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cookies] = useCookies();
+  const [addProduct] = useAddProductMutation();
   const [resources, setResources] = useState<Resource[]>([]);
   const [resourceOptions, setResourceOptions] = useState<
     { value: string; label: string }[]
@@ -143,7 +145,7 @@ const AddProduct = ({
         let res;
         if (editProduct) {
           res = await axios.put(
-            `${process.env.REACT_APP_BACKEND_URL}products/${editProduct._id}`,
+            `${process.env.REACT_APP_BACKEND_URL}product/${editProduct._id}`,
             values,
             {
               headers: {
@@ -157,19 +159,15 @@ const AddProduct = ({
             onProductUpdated(res.data.product);
           }
         } else {
-          res = await axios.post(
-            `${process.env.REACT_APP_BACKEND_URL}products/`,
-            values,
-            {
-              headers: {
-                Authorization: `Bearer ${cookies?.access_token}`,
-              },
-            }
-          );
-          toast.success("Product created successfully");
-
+          const payload = {
+            productName: values.productName,
+            resource: values.resource,
+            category: "direct",
+          };
+          const response: any = await addProduct(payload).unwrap();
+          toast.success(response?.message || "Product created successfully");
           if (onProductCreated) {
-            onProductCreated(res.data.product);
+            onProductCreated(response?.product);
           }
         }
 

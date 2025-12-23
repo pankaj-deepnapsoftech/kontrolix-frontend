@@ -20,6 +20,7 @@ const store = configureStore({
   reducer: {
     [authSlice.name]: authSlice.reducer,
     [drawersSlice.name]: drawersSlice.reducer,
+    [api.reducerPath]: api.reducer,
     [processApi.reducerPath]: processApi.reducer, // ✅ ADD THIS
     // (optional) others like:
     [productApi.reducerPath]: productApi.reducer,
