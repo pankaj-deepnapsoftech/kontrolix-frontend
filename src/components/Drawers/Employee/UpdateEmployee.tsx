@@ -80,7 +80,14 @@ const UpdateEmployee: React.FC<UpdateEmployeeProps> = ({
       setLastname(data.user?.last_name);
       setEmail(data.user.email);
       setPhone(data.user.phone);
-      setRole(data.user?.role);
+      
+      const userRole = data.user?.role;
+      if (userRole && typeof userRole === 'object' && userRole.name) {
+        setRole({ value: userRole._id, label: userRole.name });
+      } else {
+        setRole(userRole);
+      }
+
       setIsVerified(data.user.isVerified);
       setIsSuper(data.user.isSuper);
     } catch (error: any) {
@@ -90,10 +97,10 @@ const UpdateEmployee: React.FC<UpdateEmployeeProps> = ({
     }
   };
 
-  const fetchRolesHandler = async () => {
+  const fetchResourcesHandler = async () => {
     try {
       const response = await fetch(
-        process.env.REACT_APP_BACKEND_URL + `role/`,
+        process.env.REACT_APP_BACKEND_URL + `resources/`,
         {
           method: "GET",
           headers: {
@@ -105,12 +112,12 @@ const UpdateEmployee: React.FC<UpdateEmployeeProps> = ({
       if (!data.success) {
         throw new Error(data.message);
       }
-      const roles = data.roles;
-      const modifiedRoles = roles.map((role: any) => ({
-        value: role._id,
-        label: role.role,
+      const resources = data.resources;
+      const modifiedResources = resources.map((resource: any) => ({
+        value: resource._id,
+        label: resource.name,
       }));
-      setRoleOptions(modifiedRoles);
+      setRoleOptions(modifiedResources);
     } catch (error: any) {
       toast.error(error?.message || "Something went wrong");
     } finally {
@@ -120,7 +127,7 @@ const UpdateEmployee: React.FC<UpdateEmployeeProps> = ({
 
   useEffect(() => {
     fetchUserDetailsHandler();
-    fetchRolesHandler();
+    fetchResourcesHandler();
   }, []);
 
   return (
@@ -199,7 +206,7 @@ const UpdateEmployee: React.FC<UpdateEmployeeProps> = ({
 
               <FormControl className="mt-3 mb-5" isRequired>
                 <FormLabel fontWeight="bold" color="gray.700">
-                  Role
+                  Machine Role
                 </FormLabel>
                 <Select
                   required

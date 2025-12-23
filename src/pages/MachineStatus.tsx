@@ -47,6 +47,8 @@ const MachineStatus: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
   const [refreshInterval, setRefreshInterval] = useState<number>(30); // seconds
+    const [assignmentsMap, setAssignmentsMap] = useState<any>({});
+  const [cookies] = useCookies();
 
   // PLC data API endpoint
   const machineApiUrl = `http://192.168.1.33:8085/api/plc-data/all`;
@@ -188,10 +190,41 @@ const MachineStatus: React.FC = () => {
     [toast, machineApiUrl]
   );
 
+  const fetchAssignments = useCallback(async () => {
+    try {
+      const resp = await fetch(
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:8085/api/") +
+          "resources/assignments/all",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+        }
+      );
+      const json = await resp.json();
+      if (!json.success) return;
+      const map: any = {};
+      (json.assignments || []).forEach((a: any) => {
+        const key = a?.resource?.name;
+        const names = (a?.employees || []).map(
+          (e: any) =>
+            [e?.first_name, e?.last_name].filter(Boolean).join(" ") ||
+            e?.email ||
+            ""
+        );
+        if (key) map[key] = names;
+      });
+      setAssignmentsMap(map);
+    } catch (_) {
+    }
+  }, [cookies]);
+
   useEffect(() => {
     // Load machine data from API
     fetchMachineData(selectedMachine);
-  }, [selectedMachine, fetchMachineData]);
+    fetchAssignments();
+  }, [selectedMachine, fetchMachineData, fetchAssignments]);
 
   // Auto-refresh functionality
   useEffect(() => {
@@ -820,6 +853,17 @@ const MachineStatus: React.FC = () => {
                           >
                             {item.plcModel}
                           </Text>
+                          {Array.isArray(assignmentsMap[item.plcBrand]) &&
+                            assignmentsMap[item.plcBrand].length > 0 && (
+                              <HStack spacing={2} mt={1}>
+                                <Badge colorScheme="blue" variant="subtle" size="sm">
+                                  Assigned:
+                                </Badge>
+                                <Text fontSize="sm" color="gray.700">
+                                  {assignmentsMap[item.plcBrand].join(", ")}
+                                </Text>
+                              </HStack>
+                            )}
                         </VStack>
 
                         {/* Right: Status & Protocol */}

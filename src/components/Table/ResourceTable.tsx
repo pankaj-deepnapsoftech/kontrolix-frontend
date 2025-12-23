@@ -331,7 +331,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                       className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
                       style={{ color: colors.table.headerText }}
                     >
-                      Name
+                     Machine Name
                     </th>
                     <th
                       className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
