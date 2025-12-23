@@ -74,14 +74,20 @@ import Sensors from "../pages/Sensors";
 import PlcMachineData from "../pages/PlcMachineData";
 import PlcDemo from "../pages/plcddemo";
 const routes = [
-  {
-    name: "Dashboard",
-    icon: <MdOutlineSpeed />,
+  // {
+  //   name: "Dashboard",
+  //   icon: <MdOutlineSpeed />,
+  //   path: "",
+  //   element: <Dashboard />,
+  //   isSublink: false,
+  // },
+ {
+    name: "Live data",
+    icon: <Activity />,
     path: "",
-    element: <Dashboard />,
+    element: <MachineStatus />,
     isSublink: false,
   },
-
   {
     name: "Employees",
     icon: <FaPeopleGroup />,
@@ -96,13 +102,13 @@ const routes = [
   //   element: <Sensors />,
   //   isSublink: false,
   // },
-  {
-    name: "Live Data",
-    icon: <BarChart3 />,
-    path: "Plc-Demo",
-    element: <PlcDemo />,
-    isSublink: false,
-  },
+  // {
+  //   name: "Live Data",1  ```````````````````````````111111111111111111111111111111111111111111111111111111111144111111qqqqqqqqqqqqqqqqq``````````````````````````````````````               r                                                                                                                                                                                                                        
+  //   icon: <BarChart3 />,
+  //   path: "Plc-Demo",
+  //   element: <PlcDemo />,
+  //   isSublink: false,
+  // },
   // {
   //   name: "PLC Machine Data",
   //   icon: <BarChart3 />,
@@ -125,13 +131,7 @@ const routes = [
     element: <Resources />,
     isSublink: false,
   },
-//  {
-//     name: "Resource Status",
-//     icon: <Activity />,
-//     path: "machine-status",
-//     element: <MachineStatus />,
-//     isSublink: false,
-//   },
+
 //   {
 //     name: "Merchant",
 //     icon: <IoIosPeople />,
