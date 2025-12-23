@@ -14,7 +14,7 @@ interface EmployeeTableProps {
     last_name: string;
     email: string;
     phone: string;
-    role: string;
+    role: any;
     isVerified: boolean;
     createdAt: string;
     updatedAt: string;
@@ -48,7 +48,16 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
       { Header: "Last Name", accessor: "last_name" },
       { Header: "Email", accessor: "email" },
       { Header: "Phone", accessor: "phone" },
-      { Header: "Role", accessor: "role" },
+      { 
+        Header: "Role", 
+        accessor: "role",
+        Cell: ({ value }: { value: any }) => {
+          if (typeof value === 'object' && value !== null && value.name) {
+            return value.name;
+          }
+          return value || "N/A";
+        }
+      },
       { Header: "isVerified", accessor: "isVerified" },
       { Header: "Created On", accessor: "createdAt" },
       { Header: "Last Updated", accessor: "updatedAt" },
