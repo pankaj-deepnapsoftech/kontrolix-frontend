@@ -73,14 +73,15 @@ import UpcomingSales from "../pages/UpcomingSales";
 import Sensors from "../pages/Sensors";
 import PlcMachineData from "../pages/PlcMachineData";
 import PlcDemo from "../pages/plcddemo";
+import AddProduct from "../components/Drawers/Product/AddProduct";
 const routes = [
-   {
-      name: "Live Data",
-      icon: <Activity />,
-      path: "",
-      element: <MachineStatus />,
-      isSublink: false,
-    },
+  {
+    name: "Live Data",
+    icon: <Activity />,
+    path: "",
+    element: <MachineStatus />,
+    isSublink: false,
+  },
   // {
   //   name: "Dashboard",
   //   icon: <MdOutlineSpeed />,
@@ -133,6 +134,13 @@ const routes = [
     isSublink: false,
   },
 
+  {
+    name: "Product",
+    icon: <SlDirection />,
+    path: "product",
+    element: <AddProduct />,
+    isSublink: false
+  },
   //   {
   //     name: "Merchant",
   //     icon: <IoIosPeople />,
