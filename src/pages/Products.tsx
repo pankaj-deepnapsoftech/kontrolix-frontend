@@ -409,7 +409,7 @@ const Products: React.FC = () => {
                   className="text-xs mt-0.5"
                   style={{ color: colors.text.secondary }}
                 >
-                  Manage your  products and services inventory
+                  Manage your  products.
                 </p>
               </div>
             </div>
