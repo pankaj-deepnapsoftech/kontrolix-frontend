@@ -29,6 +29,8 @@ import { FiDownload, FiSearch } from "react-icons/fi";
 import { colors } from "../theme/colors";
 import { Package } from "lucide-react";
 import AddProduct from "../components/Drawers/Product/AddProduct";
+import UpdateProduct from "../components/Drawers/Product/UpdateProduct";
+import ProductDetails from "../components/Drawers/Product/ProductDetails";
 import * as XLSX from "xlsx";
 
 const Products: React.FC = () => {
@@ -369,20 +371,20 @@ const Products: React.FC = () => {
         />
       )}
       {/* Update Product Drawer */}
-      {/* {isUpdateProductDrawerOpened && (
+      {isUpdateProductDrawerOpened && (
         <UpdateProduct
           closeDrawerHandler={closeUpdateProductDrawerHandler}
           productId={productId}
           fetchProductsHandler={fetchProductsHandler}
         />
-      )} */}
+      )}
       {/* Product Details Drawer */}
-      {/* {isProductDetailsDrawerOpened && (
+      {isProductDetailsDrawerOpened && (
         <ProductDetails
           closeDrawerHandler={closeProductDetailsDrawerHandler}
           productId={productId}
         />
-      )} */}
+      )}
 
       <div className="p-2 lg:p-3">
         {/* Header Section */}
@@ -403,13 +405,13 @@ const Products: React.FC = () => {
                   className="text-xl lg:text-2xl font-semibold"
                   style={{ color: colors.text.primary }}
                 >
-                 Products
+                  Products
                 </h1>
                 <p
                   className="text-xs mt-0.5"
                   style={{ color: colors.text.secondary }}
                 >
-                  Manage your  products.
+                  Manage your products and services inventory
                 </p>
               </div>
             </div>
@@ -496,98 +498,6 @@ const Products: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* Bulk Upload Modal */}
-        {showBulkUploadMenu && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div
-              className=" shadow-xl max-w-md w-full p-6"
-              style={{ backgroundColor: colors.background.card }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3
-                  className="text-lg font-semibold"
-                  style={{ color: colors.text.primary }}
-                >
-                  Bulk Upload Direct Products
-                </h3>
-                <button
-                  onClick={() => setShowBulkUploadMenu(false)}
-                  className="p-1  transition-colors"
-                  style={{ color: colors.text.secondary }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = colors.gray[100];
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }}
-                >
-                  <RxCross2 size="20px" />
-                </button>
-              </div>
-
-              <form onSubmit={bulkUploadHandler}>
-                <div className="mb-4">
-                  <label
-                    className="block text-sm font-medium mb-2"
-                    style={{ color: colors.text.primary }}
-                  >
-                    Choose File (.csv or .xlsx)
-                  </label>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept=".csv, .xlsx, .xls"
-                    className="w-full px-3 py-2 border  focus:outline-none focus:ring-3 transition-colors"
-                    style={{
-                      backgroundColor: colors.input.background,
-                      borderColor: colors.input.border,
-                      color: colors.text.primary,
-                    }}
-                  />
-                  <p
-                    className="text-xs mt-1"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    Note: Product ID will be auto-generated. Don't include it in
-                    your file.
-                  </p>
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    type="submit"
-                    disabled={bulkUploading}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2  font-medium transition-colors disabled:opacity-50"
-                    style={{
-                      backgroundColor: colors.button.primary,
-                      color: colors.text.inverse,
-                    }}
-                  >
-                    {bulkUploading ? "Uploading..." : "Upload"}
-                    <AiFillFileExcel size="16px" />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={downloadSampleTemplate}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2  font-medium border transition-colors"
-                    style={{
-                      borderColor: colors.border.medium,
-                      color: colors.text.primary,
-                      backgroundColor: colors.background.card,
-                    }}
-                  >
-                    Sample Template
-                    <AiFillFileExcel size="16px" />
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Table Section */}
         <div
           className=" shadow-sm border border-gray-100 overflow-hidden"
           style={{
