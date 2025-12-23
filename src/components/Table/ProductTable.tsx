@@ -64,11 +64,6 @@ const ProductTable: React.FC<ProductTableProps> = ({
         Cell: ({ value }: { value: string }) => capitalizeWords(value),
       },
       {
-        Header: "Inventory Category",
-        accessor: "inventory_category",
-        Cell: ({ value }: { value: string }) => capitalizeWords(value) || "N/A",
-      },
-      {
         Header: "Category",
         accessor: "category",
         Cell: ({ value }: { value: string }) => capitalizeWords(value),
@@ -76,11 +71,6 @@ const ProductTable: React.FC<ProductTableProps> = ({
       {
         Header: "Sub Category",
         accessor: "sub_category",
-        Cell: ({ value }: { value: string }) => capitalizeWords(value) || "N/A",
-      },
-      {
-        Header: "Type",
-        accessor: "item_type",
         Cell: ({ value }: { value: string }) => capitalizeWords(value) || "N/A",
       },
       { Header: "Product/Service", accessor: "product_or_service" },
@@ -202,7 +192,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
         <div className="flex items-center justify-center py-20">
           <div className="flex items-center gap-3">
             <div
-              className="animate-spin rounded-full h-8 w-8 border-b-2"
+              className="animate-spin h-8 w-8 border-b-2"
               style={{ borderColor: colors.primary[500] }}
             ></div>
             <span
@@ -218,7 +208,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
       {!isLoadingProducts && dataProducts.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div
-            className="rounded-full p-6 mb-4"
+            className= "p-6 mb-4"
             style={{ backgroundColor: colors.gray[100] }}
           >
             <svg
@@ -267,7 +257,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                     {bulkDeleteProductsHandler && (
                     <button
                       onClick={() => setShowBulkDeleteModal(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-colors"
                     >
                       <svg
                         className="w-4 h-4"
@@ -288,14 +278,14 @@ const ProductTable: React.FC<ProductTableProps> = ({
                   {bulkApproveProductsHandler && selectedProducts.length > 0 && (
                     <button
                       onClick={() => bulkApproveProductsHandler(selectedProducts)}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
                     >
                       Approve Selected ({selectedProducts.length})
                     </button>
                   )}
                   <button
                     onClick={() => setSelectedProducts([])}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white text-sm font-medium rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white text-sm font-medium transition-colors"
                   >
                     <svg
                       className="w-4 h-4"
@@ -345,7 +335,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
           </div>
 
           <div
-            className="rounded-xl shadow-sm overflow-hidden"
+            className= "shadow-sm overflow-hidden"
             style={{
               backgroundColor: colors.background.card,
               border: `1px solid ${colors.border.light}`,
@@ -383,7 +373,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                           if (el) el.indeterminate = isIndeterminate;
                         }}
                         onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2"
                       />
                     </th>
                     <th
@@ -415,43 +405,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                       className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
                       style={{ color: colors.table.headerText }}
                     >
-                      Inventory Type
-                    </th>
-                    <th
-                      className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
-                      style={{ color: colors.table.headerText }}
-                    >
-                      Inventory Category
-                    </th>
-                    <th
-                      className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
-                      style={{ color: colors.table.headerText }}
-                    >
-                      Type
-                    </th>
-                    <th
-                      className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
-                      style={{ color: colors.table.headerText }}
-                    >
-                      UOM
-                    </th>
-                    <th
-                      className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
-                      style={{ color: colors.table.headerText }}
-                    >
-                      Price
-                    </th>
-                    <th
-                      className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
-                      style={{ color: colors.table.headerText }}
-                    >
                       Current Stock 
-                    </th>
-                    <th
-                      className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
-                      style={{ color: colors.table.headerText }}
-                    >
-                      Last Change
                     </th>
                     <th
                       className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
@@ -518,7 +472,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                 e.target.checked
                               )
                             }
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2"
                           />
                         </td>
                         <td
@@ -548,43 +502,6 @@ const ProductTable: React.FC<ProductTableProps> = ({
                           title={row.original.name}
                         >
                           {capitalizeWords(row.original.name) || "N/A"}
-                        </td>
-                        <td
-                          className="px-4 py-3 text-sm whitespace-nowrap"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {capitalizeWords(row.original.category) || "N/A"}
-                        </td>
-                        <td className="px-4 py-3 text-sm whitespace-nowrap">
-                          {row.original.inventory_category && (
-                            <span
-                              className="px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap"
-                              style={{
-                                backgroundColor:
-                                  row.original.inventory_category === "direct"
-                                    ? colors.success[100]
-                                    : colors.error[100],
-                                color:
-                                  row.original.inventory_category === "direct"
-                                    ? colors.success[700]
-                                    : colors.error[700],
-                              }}
-                            >
-                              {capitalizeWords(row.original.inventory_category)}
-                            </span>
-                          )}
-                        </td>
-                        <td
-                          className="px-4 py-3 text-sm whitespace-nowrap"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {capitalizeWords(row.original.item_type) || "N/A"}
-                        </td>
-                        <td
-                          className="px-4 py-3 text-sm whitespace-nowrap"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {row.original.uom || "N/A"}
                         </td>
                         <td className="px-4 py-3 text-sm whitespace-nowrap relative">
                           <div className="flex flex-col">
@@ -617,7 +534,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                   {isLatestPriceModalOpen === row.original._id && (
                                     <div
                                       ref={modalRef}
-                                      className="absolute top-full left-0 mt-1 bg-white p-4 rounded-lg shadow-lg w-64 z-50"
+                                      className="absolute top-full left-0 mt-1 bg-white p-4 shadow-lg w-64 z-50"
                                       style={{
                                         border: `1px solid ${colors.border.light}`,
                                       }}
@@ -663,51 +580,6 @@ const ProductTable: React.FC<ProductTableProps> = ({
                               )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm whitespace-nowrap">
-                          <div className="flex flex-col">
-                            <span style={{ color: colors.text.secondary }}>
-                              {(row.original.current_stock || 0) +
-                                (row.original.updated_stock || 0) -
-                                (row.original.updated_stock || 0)}
-                            </span>
-                            {row.original.updated_stock &&
-                              row.original.updated_stock !== null && (
-                                <span
-                                  className="text-xs font-medium"
-                                  style={{ color: colors.primary[600] }}
-                                >
-                                  Updated: +{row.original.updated_stock}
-                                </span>
-                              )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm whitespace-nowrap">
-                          {row.original.change_type && (
-                            <div className="flex gap-1 items-center whitespace-nowrap">
-                              {row.original.change_type === "increase" ? (
-                                <FaArrowUpLong
-                                  size={16}
-                                  style={{ color: colors.success[500] }}
-                                />
-                              ) : (
-                                <FaArrowDownLong
-                                  size={16}
-                                  style={{ color: colors.error[500] }}
-                                />
-                              )}
-                              <span
-                                style={{
-                                  color:
-                                    row.original.change_type === "increase"
-                                      ? colors.success[600]
-                                      : colors.error[600],
-                                }}
-                              >
-                                {row.original.quantity_changed}
-                              </span>
-                            </div>
-                          )}
-                        </td>
                         <td
                           className="px-4 py-3 text-sm whitespace-nowrap"
                           style={{ color: colors.text.secondary }}
@@ -727,7 +599,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                     row.original._id
                                   )
                                 }
-                                className="p-2 rounded-lg transition-all duration-200 hover:shadow-md"
+                                className="p-2 transition-all duration-200 hover:shadow-md"
                                 style={{
                                   color: colors.secondary[600],
                                   backgroundColor: colors.secondary[50],
@@ -752,7 +624,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                     row.original._id
                                   )
                                 }
-                                className="p-2 rounded-lg transition-all duration-200 hover:shadow-md"
+                                className="p-2 transition-all duration-200 hover:shadow-md"
                                 style={{
                                   color: colors.primary[600],
                                   backgroundColor: colors.primary[50],
@@ -777,7 +649,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                     setdeleteId(row.original._id);
                                     setshowDeletePage(true);
                                   }}
-                                  className="p-2 rounded-lg transition-all duration-200 hover:shadow-md"
+                                  className="p-2 transition-all duration-200 hover:shadow-md"
                                   style={{
                                     color: colors.error[600],
                                     backgroundColor: colors.error[50],
@@ -800,7 +672,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                 onClick={() =>
                                   approveProductHandler(row.original._id)
                                 }
-                                className="p-2 rounded-lg transition-all duration-200 hover:shadow-md"
+                                className="p-2 transition-all duration-200 hover:shadow-md"
                                 style={{
                                   color: colors.success[600],
                                   backgroundColor: colors.success[50],
@@ -839,7 +711,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
               <button
                 disabled={!canPreviousPage}
                 onClick={previousPage}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                 style={{
                   color: colors.text.primary,
                   backgroundColor: colors.background.card,
@@ -883,7 +755,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
               <button
                 disabled={!canNextPage}
                 onClick={nextPage}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                 style={{
                   color: colors.text.primary,
                   backgroundColor: colors.background.card,
@@ -924,7 +796,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
       {showDeletePage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div
-            className="w-full max-w-md mx-4 rounded-xl shadow-xl"
+            className="w-full max-w-md mx-4 shadow-xl"
             style={{ backgroundColor: colors.background.card }}
           >
             <div className="p-6">
@@ -939,7 +811,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
 
               <div className="mb-6">
                 <div
-                  className="rounded-lg p-4 mb-4"
+                  className= "p-4 mb-4"
                   style={{ backgroundColor: colors.error[50] }}
                 >
                   <div className="flex flex-col items-center gap-3">
@@ -979,7 +851,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
               <div className="flex gap-3">
                 <button
                   onClick={() => setshowDeletePage(false)}
-                  className="flex-1 px-4 py-2 rounded-lg border transition-all duration-200"
+                  className="flex-1 px-4 py-2 border transition-all duration-200"
                   style={{
                     borderColor: colors.border.medium,
                     color: colors.text.secondary,
@@ -993,7 +865,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                     deleteProductHandler(deleteId);
                     setshowDeletePage(false);
                   }}
-                  className="flex-1 px-4 py-2 rounded-lg transition-all duration-200"
+                  className="flex-1 px-4 py-2 transition-all duration-200"
                   style={{
                     backgroundColor: colors.error[500],
                     color: colors.text.inverse,
@@ -1010,7 +882,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
       {showBulkDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div
-            className="w-full max-w-md mx-4 rounded-xl shadow-xl"
+            className="w-full max-w-md mx-4 shadow-xl"
             style={{ backgroundColor: colors.background.card }}
           >
             <div className="p-6">
@@ -1024,7 +896,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                 {!isBulkDeleting && (
                   <button
                     onClick={() => setShowBulkDeleteModal(false)}
-                    className="p-1 rounded-lg transition-colors hover:bg-gray-100"
+                    className="p-1 transition-colors hover:bg-gray-100"
                   >
                     <svg
                       className="w-5 h-5"
@@ -1046,7 +918,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
 
               <div className="mb-6">
                 <div
-                  className="rounded-lg p-4 mb-4"
+                  className= "p-4 mb-4"
                   style={{ backgroundColor: colors.error[50] }}
                 >
                   <div className="flex flex-col items-center gap-3">
@@ -1088,7 +960,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                 <button
                   onClick={() => setShowBulkDeleteModal(false)}
                   disabled={isBulkDeleting}
-                  className="flex-1 px-4 py-2 rounded-lg border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     borderColor: colors.border.medium,
                     color: colors.text.secondary,
@@ -1100,7 +972,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                 <button
                   onClick={handleBulkDelete}
                   disabled={isBulkDeleting}
-                  className="flex-1 px-4 py-2 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   style={{
                     backgroundColor: colors.error[500],
                     color: colors.text.inverse,
@@ -1108,7 +980,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                 >
                   {isBulkDeleting ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-transparent border-white"></div>
+                      <div className="animate-spin h-4 w-4 border-2 border-b-transparent border-white"></div>
                       Deleting...
                     </>
                   ) : (

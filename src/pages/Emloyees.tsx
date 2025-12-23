@@ -185,11 +185,11 @@ const Employees: React.FC = () => {
       )}
 
       {/* Header Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+      <div className="bg-white  shadow-sm border border-gray-100 p-6 mb-6">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           {/* Title Section */}
           <div className="flex items-center gap-4">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-3 rounded-xl shadow-lg">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-3  shadow-lg">
               <svg
                 className="w-6 h-6 text-white"
                 fill="none"
@@ -236,7 +236,7 @@ const Employees: React.FC = () => {
             </div>
             <input
               type="text"
-              className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+              className="block w-full pl-10 pr-3 py-3 border border-gray-300  leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
               placeholder="Search employees..."
               value={searchKey || ""}
               onChange={(e) => setSearchKey(e.target.value)}
@@ -246,7 +246,7 @@ const Employees: React.FC = () => {
       </div>
 
       {/* Table Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white  shadow-sm border border-gray-100 overflow-hidden">
         <EmployeeTable
           employees={filteredData}
           openEmployeeDetailsDrawerHandler={openEmployeeDetailsDrawerHandler}

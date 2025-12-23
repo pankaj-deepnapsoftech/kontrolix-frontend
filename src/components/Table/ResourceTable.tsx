@@ -150,7 +150,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
         <div className="flex items-center justify-center py-20">
           <div className="flex items-center gap-3">
             <div
-              className="animate-spin rounded-full h-8 w-8 border-b-2"
+              className="animate-spin  h-8 w-8 border-b-2"
               style={{ borderColor: colors.primary[500] }}
             ></div>
             <span
@@ -166,7 +166,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
       {!isLoadingResources && resources.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div
-            className="rounded-full p-6 mb-4"
+            className=" p-6 mb-4"
             style={{ backgroundColor: colors.gray[100] }}
           >
             <svg
@@ -217,7 +217,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                   {deleteResourceHandler && (
                     <button
                       onClick={() => setShowBulkDeleteModal(true)}
-                      className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
+                      className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm font-medium  transition-colors whitespace-nowrap"
                     >
                       <svg
                         className="w-4 h-4 flex-shrink-0"
@@ -239,7 +239,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                   )}
                   <button
                     onClick={() => setSelectedResources([])}
-                    className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-xs sm:text-sm font-medium  transition-colors whitespace-nowrap"
                   >
                     <svg
                       className="w-4 h-4 flex-shrink-0"
@@ -270,7 +270,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
               </span>
               <select
                 onChange={(e) => setPageSize(Number(e.target.value))}
-                className="px-3 py-2 text-sm rounded-lg border transition-colors min-w-0"
+                className="px-3 py-2 text-sm  border transition-colors min-w-0"
                 value={pageSize}
                 style={{
                   backgroundColor: colors.input.background,
@@ -289,7 +289,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
 
           {/* Enhanced Table */}
           <div
-            className="rounded-xl shadow-sm overflow-hidden"
+            className=" shadow-sm overflow-hidden"
             style={{
               backgroundColor: colors.background.card,
               border: `1px solid ${colors.border.light}`,
@@ -317,7 +317,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                             if (el) el.indeterminate = isIndeterminate;
                           }}
                           onChange={(e) => handleSelectAll(e.target.checked)}
-                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300  focus:ring-blue-500 focus:ring-2"
                         />
                       </th>
                     )}
@@ -412,7 +412,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                                   e.target.checked
                                 )
                               }
-                              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300  focus:ring-blue-500 focus:ring-2"
                             />
                           </td>
                         )}
@@ -432,7 +432,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                         </td>
                         <td className="px-4 py-3 text-sm whitespace-nowrap">
                           <span
-                            className="px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap"
+                            className="px-2 py-1  text-xs font-medium whitespace-nowrap"
                             style={{
                               backgroundColor:
                                 row.original.type === "Machine"
@@ -484,7 +484,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                                       row.original._id
                                     )
                                   }
-                                  className="p-2 rounded-lg transition-all duration-200 hover:shadow-md"
+                                  className="p-2  transition-all duration-200 hover:shadow-md"
                                   style={{
                                     color: colors.secondary[600],
                                     backgroundColor: colors.secondary[50],
@@ -507,7 +507,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                                   setEditResource(row.original);
                                   setAddResourceDrawerOpened(true);
                                 }}
-                                className="p-2 rounded-lg transition-all duration-200 hover:shadow-md"
+                                className="p-2  transition-all duration-200 hover:shadow-md"
                                 style={{
                                   color: colors.primary[600],
                                   backgroundColor: colors.primary[50],
@@ -530,7 +530,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                                     setdeleteId(row.original._id);
                                     setshowDeletePage(true);
                                   }}
-                                  className="p-2 rounded-lg transition-all duration-200 hover:shadow-md"
+                                  className="p-2  transition-all duration-200 hover:shadow-md"
                                   style={{
                                     color: colors.error[600],
                                     backgroundColor: colors.error[50],
@@ -571,7 +571,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
               <button
                 disabled={!canPreviousPage}
                 onClick={previousPage}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium  disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                 style={{
                   color: colors.text.primary,
                   backgroundColor: colors.background.card,
@@ -615,7 +615,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
               <button
                 disabled={!canNextPage}
                 onClick={nextPage}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium  disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                 style={{
                   color: colors.text.primary,
                   backgroundColor: colors.background.card,
@@ -657,7 +657,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
       {showDeletePage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div
-            className="w-full max-w-md mx-4 rounded-xl shadow-xl"
+            className="w-full max-w-md mx-4  shadow-xl"
             style={{ backgroundColor: colors.background.card }}
           >
             <div className="p-6">
@@ -672,7 +672,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
 
               <div className="mb-6">
                 <div
-                  className="rounded-lg p-4 mb-4"
+                  className=" p-4 mb-4"
                   style={{ backgroundColor: colors.error[50] }}
                 >
                   <div className="flex flex-col items-center gap-3">
@@ -712,7 +712,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
               <div className="flex gap-3">
                 <button
                   onClick={() => setshowDeletePage(false)}
-                  className="flex-1 px-4 py-2 rounded-lg border transition-all duration-200"
+                  className="flex-1 px-4 py-2  border transition-all duration-200"
                   style={{
                     borderColor: colors.border.medium,
                     color: colors.text.secondary,
@@ -726,7 +726,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                     deleteResourceHandler(deleteId);
                     setshowDeletePage(false);
                   }}
-                  className="flex-1 px-4 py-2 rounded-lg transition-all duration-200"
+                  className="flex-1 px-4 py-2  transition-all duration-200"
                   style={{
                     backgroundColor: colors.error[500],
                     color: colors.text.inverse,
@@ -744,7 +744,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
       {showBulkDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div
-            className="w-full max-w-md mx-4 rounded-xl shadow-xl"
+            className="w-full max-w-md mx-4  shadow-xl"
             style={{ backgroundColor: colors.background.card }}
           >
             <div className="p-6">
@@ -758,7 +758,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                 {!isBulkDeleting && (
                   <button
                     onClick={() => setShowBulkDeleteModal(false)}
-                    className="p-1 rounded-lg transition-colors hover:bg-gray-100"
+                    className="p-1  transition-colors hover:bg-gray-100"
                   >
                     <svg
                       className="w-5 h-5"
@@ -780,7 +780,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
 
               <div className="mb-6">
                 <div
-                  className="rounded-lg p-4 mb-4"
+                  className=" p-4 mb-4"
                   style={{ backgroundColor: colors.error[50] }}
                 >
                   <div className="flex flex-col items-center gap-3">
@@ -819,12 +819,12 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
 
                 {isBulkDeleting && (
                   <div
-                    className="rounded-lg p-4 mb-4"
+                    className=" p-4 mb-4"
                     style={{ backgroundColor: colors.primary[50] }}
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className="animate-spin rounded-full h-5 w-5 border-2 border-b-transparent"
+                        className="animate-spin  h-5 w-5 border-2 border-b-transparent"
                         style={{ borderColor: colors.primary[500] }}
                       ></div>
                       <div>
@@ -850,7 +850,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                 <button
                   onClick={() => setShowBulkDeleteModal(false)}
                   disabled={isBulkDeleting}
-                  className="flex-1 px-4 py-2 rounded-lg border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2  border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     borderColor: colors.border.medium,
                     color: colors.text.secondary,
@@ -862,7 +862,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                 <button
                   onClick={handleBulkDelete}
                   disabled={isBulkDeleting}
-                  className="flex-1 px-4 py-2 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2  transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   style={{
                     backgroundColor: colors.error[500],
                     color: colors.text.inverse,
@@ -870,7 +870,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                 >
                   {isBulkDeleting ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-transparent border-white"></div>
+                      <div className="animate-spin  h-4 w-4 border-2 border-b-transparent border-white"></div>
                       Deleting...
                     </>
                   ) : (
