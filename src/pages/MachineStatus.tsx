@@ -269,8 +269,15 @@ const MachineStatus: React.FC = () => {
       if (!json.success) return;
       const grouped: any = {};
       (json.products || []).forEach((p: any) => {
-        const resId = p?.resource;
-        const key = resourceIdToName[resId];
+        let key;
+        // Handle both populated resource object and ID string
+        if (p?.resource && typeof p.resource === "object" && p.resource.name) {
+          key = norm(p.resource.name);
+        } else {
+          const resId = p?.resource;
+          key = resourceIdToName[resId];
+        }
+
         if (!key) return;
         if (!grouped[key]) grouped[key] = [];
         grouped[key].push(p?.name);

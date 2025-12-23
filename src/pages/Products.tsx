@@ -403,13 +403,13 @@ const Products: React.FC = () => {
                   className="text-xl lg:text-2xl font-semibold"
                   style={{ color: colors.text.primary }}
                 >
-                  Direct Products
+                 Products
                 </h1>
                 <p
                   className="text-xs mt-0.5"
                   style={{ color: colors.text.secondary }}
                 >
-                  Manage your direct products and services inventory
+                  Manage your  products and services inventory
                 </p>
               </div>
             </div>
