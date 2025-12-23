@@ -352,7 +352,7 @@ const AddResource = ({
           {/* Name */}
           <FormControl className="mt-3 mb-5" isRequired>
             <FormLabel fontWeight="bold" color="gray.700">
-              Name
+              Machine Name
             </FormLabel>
             <Select
               className="rounded mt-2 border"
