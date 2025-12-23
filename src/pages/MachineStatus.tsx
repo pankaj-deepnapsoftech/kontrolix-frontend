@@ -48,6 +48,9 @@ const MachineStatus: React.FC = () => {
   const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
   const [refreshInterval, setRefreshInterval] = useState<number>(30); // seconds
     const [assignmentsMap, setAssignmentsMap] = useState<any>({});
+  const [productsByResource, setProductsByResource] = useState<any>({});
+  const [resourceIdToName, setResourceIdToName] = useState<any>({});
+  const norm = (s: any) => String(s || "").trim().toLowerCase();
   const [cookies] = useCookies();
 
   // PLC data API endpoint
@@ -220,11 +223,74 @@ const MachineStatus: React.FC = () => {
     }
   }, [cookies]);
 
+  const fetchResources = useCallback(async () => {
+    try {
+      const resp = await fetch(
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:8085/api/") +
+          "resources",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+        }
+      );
+      const json = await resp.json();
+      const list = Array.isArray(json?.resources)
+        ? json.resources
+        : Array.isArray(json)
+        ? json
+        : [];
+      const idMap: any = {};
+      list.forEach((r: any) => {
+        if (r?._id && r?.name) {
+          idMap[r._id] = norm(r.name);
+        }
+      });
+      setResourceIdToName(idMap);
+    } catch (_) {}
+  }, [cookies]);
+
+  const fetchProductsAll = useCallback(async () => {
+    try {
+      if (!resourceIdToName || Object.keys(resourceIdToName).length === 0)
+        return;
+      const resp = await fetch(
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:8085/api/") +
+          "product/all",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+        }
+      );
+      const json = await resp.json();
+      if (!json.success) return;
+      const grouped: any = {};
+      (json.products || []).forEach((p: any) => {
+        const resId = p?.resource;
+        const key = resourceIdToName[resId];
+        if (!key) return;
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(p?.name);
+      });
+      setProductsByResource(grouped);
+    } catch (_) {}
+  }, [cookies, resourceIdToName]);
+
   useEffect(() => {
     // Load machine data from API
     fetchMachineData(selectedMachine);
     fetchAssignments();
-  }, [selectedMachine, fetchMachineData, fetchAssignments]);
+    fetchResources();
+  }, [selectedMachine, fetchMachineData, fetchAssignments, fetchResources]);
+
+  useEffect(() => {
+    if (Object.keys(resourceIdToName || {}).length > 0) {
+      fetchProductsAll();
+    }
+  }, [resourceIdToName, fetchProductsAll]);
 
   // Auto-refresh functionality
   useEffect(() => {
@@ -845,6 +911,17 @@ const MachineStatus: React.FC = () => {
                                 </Badge>
                                 <Text fontSize="sm" color="gray.700">
                                   {assignmentsMap[item.plcBrand].join(", ")}
+                                </Text>
+                              </HStack>
+                            )}
+                          {Array.isArray(productsByResource[norm(item.plcBrand)]) &&
+                            productsByResource[norm(item.plcBrand)].length > 0 && (
+                              <HStack spacing={2} mt={1}>
+                                <Badge colorScheme="purple" variant="subtle" size="sm">
+                                  Product:
+                                </Badge>
+                                <Text fontSize="sm" color="gray.700">
+                                  {productsByResource[norm(item.plcBrand)].join(", ")}
                                 </Text>
                               </HStack>
                             )}
