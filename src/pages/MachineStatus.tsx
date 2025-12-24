@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useCookies } from "react-cookie";
 import {
   Box,
@@ -35,11 +35,15 @@ import {
   Line,
 } from "recharts";
 import { Activity } from "lucide-react";
+import { io } from "socket.io-client";
 
 const MachineStatus: React.FC = () => {
   const toast = useToast();
   const [machineData, setMachineData] = useState<any[]>([]);
+  const [rawPlcRows, setRawPlcRows] = useState<any[]>([]);
+  const [isLive, setIsLive] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [allBrands, setAllBrands] = useState<string[]>([]);
   const [selectedMachine, setSelectedMachine] = useState<string>("all");
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
   const [selectedProtocol, setSelectedProtocol] = useState<string>("all");
@@ -53,8 +57,11 @@ const MachineStatus: React.FC = () => {
   const norm = (s: any) => String(s || "").trim().toLowerCase();
   const [cookies] = useCookies();
 
-  // PLC data API endpoint
-  const machineApiUrl = `http://192.168.1.33:8085/api/plc-data/all`;
+  const BACKEND_API_BASE =
+    (process as any)?.env?.REACT_APP_BACKEND_URL || "http://192.168.1.33:8085/api/";
+  const machineApiUrl =
+    (BACKEND_API_BASE.endsWith("/") ? BACKEND_API_BASE : BACKEND_API_BASE + "/") + "plc/all";
+  const socketUrl = BACKEND_API_BASE.replace(/\/api\/?$/, "");
 
   // Store API summary data for statistics cards
   const [apiSummaryData, setApiSummaryData] = useState<any>(null);
@@ -101,16 +108,43 @@ const MachineStatus: React.FC = () => {
         new Date(b.rawTimestamp).getTime() - new Date(a.rawTimestamp).getTime()
     );
 
-    // Set status based on order: 1st = running, 2nd = idle, rest = stopped
-    // Keep the actual API values for motorStatus, productionActive, plcRunning
-    machinesArray.forEach((machine, index) => {
-      if (index === 0) {
-        machine.status = "running";
-      } else if (index === 1) {
-        machine.status = "idle";
-      } else {
-        machine.status = "stopped";
-      }
+    machinesArray.forEach((machine) => {
+      const running =
+        Boolean(machine.plcRunning) ||
+        machine.motorStatus === 1 ||
+        machine.productionActive === 1;
+      const idleBase =
+        Boolean(machine.plcRunning) &&
+        machine.productionActive === 0 &&
+        machine.motorStatus === 0;
+      let status = running ? "running" : idleBase ? "idle" : "stopped";
+      const ts =
+        machine.rawTimestamp ? new Date(machine.rawTimestamp).getTime() : 0;
+      const ageSec = ts > 0 ? (Date.now() - ts) / 1000 : Infinity;
+      if (ageSec > 20) status = "stopped";
+      else if (ageSec > 10) status = "idle";
+      machine.status = status;
+    });
+
+    const missing = (allBrands || []).filter((b) => !machineMap.has(b));
+    missing.forEach((b) => {
+      machinesArray.push({
+        machineKey: b,
+        deviceId: b,
+        plcBrand: b,
+        plcModel: "Unknown",
+        plcProtocol: "Unknown",
+        timestamp: "",
+        rawTimestamp: 0,
+        temperature: 0,
+        pressure: 0,
+        rpm: 0,
+        productionCount: 0,
+        motorStatus: 0,
+        productionActive: 0,
+        plcRunning: false,
+        status: "stopped",
+      });
     });
 
     return machinesArray;
@@ -165,7 +199,7 @@ const MachineStatus: React.FC = () => {
         const response = await fetch(machineApiUrl);
 
         if (!response.ok) {
-          throw new Error("Failed to fetch PLC data");
+          throw new Error(`Failed to fetch PLC data (status ${response.status})`);
         }
 
         const result = await response.json();
@@ -173,6 +207,7 @@ const MachineStatus: React.FC = () => {
           throw new Error(result.message || "Unexpected response from PLC API");
         }
 
+        setRawPlcRows(result.data);
         const transformedData = transformMachineData(result.data);
         setMachineData(transformedData);
         setApiSummaryData(buildSummary(transformedData));
@@ -192,6 +227,16 @@ const MachineStatus: React.FC = () => {
     },
     [toast, machineApiUrl]
   );
+
+  const fetchPlcBrands = useCallback(async () => {
+    try {
+      const base = BACKEND_API_BASE.endsWith("/") ? BACKEND_API_BASE : BACKEND_API_BASE + "/";
+      const resp = await fetch(base + "plc/brands");
+      const json = await resp.json();
+      const arr = Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : [];
+      setAllBrands(arr.filter((x) => typeof x === "string"));
+    } catch (_) {}
+  }, [BACKEND_API_BASE]);
 
   const fetchAssignments = useCallback(async () => {
     try {
@@ -287,18 +332,68 @@ const MachineStatus: React.FC = () => {
   }, [cookies, resourceIdToName]);
 
   useEffect(() => {
-    // Load machine data from API
     fetchMachineData(selectedMachine);
     fetchAssignments();
     fetchResources();
-  }, [selectedMachine, fetchMachineData, fetchAssignments, fetchResources]);
-
+    fetchPlcBrands();
+  }, [selectedMachine, fetchMachineData, fetchAssignments, fetchResources, fetchPlcBrands]);
+  
   useEffect(() => {
     if (Object.keys(resourceIdToName || {}).length > 0) {
       fetchProductsAll();
     }
   }, [resourceIdToName, fetchProductsAll]);
 
+  const socketRef = useRef<any>(null);
+  useEffect(() => {
+    if (socketRef.current) return;
+    const s = io(socketUrl, {
+      transports: ["websocket"],
+      reconnection: true,
+      reconnectionDelay: 500,
+      reconnectionAttempts: Infinity,
+    });
+    socketRef.current = s;
+    s.on("connect", () => {
+      setIsLive(true);
+      setAutoRefresh(false);
+      s.emit("subscribePlcData");
+    });
+    s.on("connect_error", () => {
+      setIsLive(false);
+      setAutoRefresh(true);
+    });
+    s.on("disconnect", () => {
+      setIsLive(false);
+    });
+    s.on("plcDataUpdate", (doc: any) => {
+      setRawPlcRows((prev) => {
+        const updated = [doc, ...prev].slice(0, 5000);
+        const transformed = transformMachineData(updated);
+        setMachineData(transformed);
+        setApiSummaryData(buildSummary(transformed));
+        setLastUpdated(new Date());
+        return updated;
+      });
+    });
+    return () => {
+      setIsLive(false);
+      if (socketRef.current) {
+        socketRef.current.off("plcDataUpdate");
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [socketUrl]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const transformed = transformMachineData(rawPlcRows);
+      setMachineData(transformed);
+      setApiSummaryData(buildSummary(transformed));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [rawPlcRows]);
   // Auto-refresh functionality
   useEffect(() => {
     if (!autoRefresh) return;
@@ -338,8 +433,10 @@ const MachineStatus: React.FC = () => {
 
   // Get unique values for filters
   const brands =
-    apiSummaryData?.brands ||
-    Array.from(new Set(machineData.map((item: any) => item.plcBrand)));
+    (allBrands && allBrands.length > 0
+      ? allBrands
+      : apiSummaryData?.brands ||
+        Array.from(new Set(machineData.map((item: any) => item.plcBrand))));
   const protocols =
     apiSummaryData?.protocols ||
     Array.from(new Set(machineData.map((item: any) => item.plcProtocol)));
@@ -422,16 +519,8 @@ const MachineStatus: React.FC = () => {
           </Box>
           <HStack spacing={3}>
             <HStack spacing={2}>
-              <Text fontSize="sm" color="gray.600">
-                Auto Refresh:
-              </Text>
-              <Badge
-                colorScheme={autoRefresh ? "green" : "gray"}
-                variant="subtle"
-                cursor="pointer"
-                onClick={() => setAutoRefresh(!autoRefresh)}
-              >
-                {autoRefresh ? "ON" : "OFF"}
+              <Badge colorScheme={isLive ? "green" : "red"} variant="solid">
+                {isLive ? "LIVE" : "OFFLINE"}
               </Badge>
             </HStack>
             <Select
@@ -439,8 +528,9 @@ const MachineStatus: React.FC = () => {
               onChange={(e) => setRefreshInterval(Number(e.target.value))}
               size="sm"
               w="100px"
-              isDisabled={!autoRefresh}
+              isDisabled={isLive || !autoRefresh}
             >
+               <option value={1}>1s</option>
               <option value={3}>3s</option>
               <option value={10}>10s</option>
               <option value={30}>30s</option>
@@ -456,6 +546,7 @@ const MachineStatus: React.FC = () => {
               }}
               isLoading={isLoading}
               size="sm"
+              isDisabled={isLive}
             >
               Refresh Now
             </Button>
