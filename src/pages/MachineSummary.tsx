@@ -468,6 +468,7 @@ const MachineSummary: React.FC = () => {
                   zIndex={1}
                 >
                   <Tr>
+                    <Th></Th>
                     <Th color={colors.table.headerText}>Timestamp</Th>
                     <Th color={colors.table.headerText}>Brand</Th>
                     <Th color={colors.table.headerText}>Model</Th>
@@ -485,6 +486,7 @@ const MachineSummary: React.FC = () => {
                     <Th color={colors.table.headerText} isNumeric>
                       Production
                     </Th>
+                    <Th></Th>
                   </Tr>
                 </Thead>
                 <Tbody>
@@ -493,6 +495,7 @@ const MachineSummary: React.FC = () => {
                       key={item._id || index}
                       _hover={{ bg: colors.table.hover }}
                     >
+                      <Td></Td>
                       <Td fontSize="xs">
                         {new Date(item.timestamp).toLocaleString("en-IN", {
                           day: "2-digit",
@@ -528,6 +531,7 @@ const MachineSummary: React.FC = () => {
                       <Td isNumeric fontSize="sm" fontWeight="medium">
                         {item.production_count?.toLocaleString() || "-"}
                       </Td>
+                      <Td></Td>
                     </Tr>
                   ))}
                 </Tbody>
