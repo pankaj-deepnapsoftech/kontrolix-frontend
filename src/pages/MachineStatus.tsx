@@ -523,33 +523,6 @@ const MachineStatus: React.FC = () => {
                 {isLive ? "LIVE" : "OFFLINE"}
               </Badge>
             </HStack>
-            <Select
-              value={refreshInterval}
-              onChange={(e) => setRefreshInterval(Number(e.target.value))}
-              size="sm"
-              w="100px"
-              isDisabled={isLive || !autoRefresh}
-            >
-               <option value={1}>1s</option>
-              <option value={3}>3s</option>
-              <option value={10}>10s</option>
-              <option value={30}>30s</option>
-              <option value={60}>1m</option>
-              <option value={300}>5m</option>
-            </Select>
-            <Button
-              leftIcon={<Activity />}
-              colorScheme="blue"
-              onClick={() => {
-                fetchMachineData(selectedMachine);
-                setLastUpdated(new Date());
-              }}
-              isLoading={isLoading}
-              size="sm"
-              isDisabled={isLive}
-            >
-              Refresh Now
-            </Button>
           </HStack>
         </Flex>
 

@@ -1,9 +1,9 @@
 // @ts-nocheck
 
-import { Button } from "@chakra-ui/react";
+import { Button, Select, Spinner, Badge } from "@chakra-ui/react";
 import { MdOutlineRefresh } from "react-icons/md";
 import { FiSearch } from "react-icons/fi";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { toast } from "react-toastify";
 import { useCookies } from "react-cookie";
 import { useDispatch, useSelector } from "react-redux";
@@ -18,6 +18,61 @@ import {
 import EmployeeTable from "../components/Table/EmployeeTable";
 import EmployeeDetails from "../components/Drawers/Employee/EmployeeDetails";
 import UpdateEmployee from "../components/Drawers/Employee/UpdateEmployee";
+import { colors } from "../theme/colors";
+import {
+  Users,
+  UserCheck,
+  UserX,
+  Shield,
+  RefreshCw,
+  TrendingUp,
+  Calendar,
+  AlertTriangle,
+} from "lucide-react";
+
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  color: string;
+  bgColor: string;
+}
+
+const StatCard: React.FC<StatCardProps> = ({
+  title,
+  value,
+  icon,
+  color,
+  bgColor,
+}) => (
+  <div
+    className="p-5 rounded-xl border transition-all duration-300 hover:shadow-lg"
+    style={{
+      backgroundColor: colors.background.card,
+      borderColor: colors.border.light,
+    }}
+  >
+    <div className="flex items-start justify-between">
+      <div>
+        <p
+          className="text-sm font-medium mb-1"
+          style={{ color: colors.text.secondary }}
+        >
+          {title}
+        </p>
+        <h3
+          className="text-2xl font-bold"
+          style={{ color: colors.text.primary }}
+        >
+          {value}
+        </h3>
+      </div>
+      <div className="p-3 rounded-xl" style={{ backgroundColor: bgColor }}>
+        <div style={{ color }}>{icon}</div>
+      </div>
+    </div>
+  </div>
+);
 
 const Employees: React.FC = () => {
   const { isSuper, allowedroutes } = useSelector((state: any) => state.auth);
@@ -158,16 +213,75 @@ const Employees: React.FC = () => {
     setFilteredData(results);
   }, [searchKey]);
 
+  // Calculate statistics
+  const stats = useMemo(() => {
+    if (!data.length) {
+      return {
+        totalEmployees: 0,
+        verifiedEmployees: 0,
+        unverifiedEmployees: 0,
+        uniqueRoles: 0,
+        verifiedPercentage: 0,
+      };
+    }
+
+    const totalEmployees = data.length;
+    const verifiedEmployees = data.filter((emp: any) => emp.isVerified).length;
+    const unverifiedEmployees = totalEmployees - verifiedEmployees;
+    const uniqueRoles = new Set(
+      data.map((emp: any) => emp.role?.role || emp.role?.name || "N/A")
+    ).size;
+    const verifiedPercentage =
+      totalEmployees > 0
+        ? ((verifiedEmployees / totalEmployees) * 100).toFixed(1)
+        : 0;
+
+    return {
+      totalEmployees,
+      verifiedEmployees,
+      unverifiedEmployees,
+      uniqueRoles,
+      verifiedPercentage,
+    };
+  }, [data]);
+
   if (!isAllowed) {
     return (
-      <div className="text-center text-red-500">
-        You are not allowed to access this route.
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: colors.background.page }}
+      >
+        <div
+          className="rounded-xl border p-8 text-center"
+          style={{
+            backgroundColor: colors.background.card,
+            borderColor: colors.border.light,
+          }}
+        >
+          <AlertTriangle
+            size={48}
+            className="mx-auto mb-4"
+            style={{ color: colors.error[500] }}
+          />
+          <h3
+            className="text-lg font-semibold mb-2"
+            style={{ color: colors.text.primary }}
+          >
+            Access Denied
+          </h3>
+          <p style={{ color: colors.text.secondary }}>
+            You are not allowed to access this route.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 lg:p-3">
+    <div
+      className="min-h-screen p-4 lg:p-6"
+      style={{ backgroundColor: colors.background.page }}
+    >
       {/* Update Employee Drawer */}
       {isUpdateEmployeeDrawerOpened && (
         <UpdateEmployee
@@ -185,43 +299,44 @@ const Employees: React.FC = () => {
       )}
 
       {/* Header Section */}
-      <div className="bg-white  shadow-sm border border-gray-100 p-6 mb-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          {/* Title Section */}
+      <div
+        className="rounded-xl shadow-sm border p-6 mb-6"
+        style={{
+          backgroundColor: colors.background.card,
+          borderColor: colors.border.light,
+        }}
+      >
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-3  shadow-lg">
-              <svg
-                className="w-6 h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-                />
-              </svg>
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-3 rounded-xl shadow-lg">
+              <Users className="text-white" size={28} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Employees</h1>
-              <p className="text-gray-600 mt-1">
+              <h1
+                className="text-2xl font-bold"
+                style={{ color: colors.text.primary }}
+              >
+                Employees
+              </h1>
+              <p
+                className="text-sm mt-1"
+                style={{ color: colors.text.secondary }}
+              >
                 Manage employee information and roles
               </p>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          {/* Controls */}
+          <div className="flex flex-wrap items-center gap-3">
             <Button
+              leftIcon={<RefreshCw size={16} />}
               onClick={fetchEmployeesHandler}
-              leftIcon={<MdOutlineRefresh />}
+              isLoading={isLoadingEmployees}
+              size="sm"
               variant="outline"
-              colorScheme="gray"
-              size="md"
-              className="border-gray-300 hover:border-gray-400 transition-all duration-200"
-              _hover={{ bg: "gray.50", transform: "translateY(-1px)" }}
+              borderColor={colors.border.medium}
+              _hover={{ bg: colors.gray[50] }}
             >
               Refresh
             </Button>
@@ -229,33 +344,87 @@ const Employees: React.FC = () => {
         </div>
 
         {/* Search Section */}
-        <div className="mt-6 flex justify-center sm:justify-end">
-          <div className="relative w-full max-w-md">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FiSearch className="h-5 w-5 text-gray-400" />
+        <div className="mt-6 flex flex-col lg:flex-row gap-4 items-end">
+          <div className="flex-1 max-w-md">
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: colors.text.primary }}
+            >
+              Search Employees
+            </label>
+            <div className="relative">
+              <FiSearch
+                className="absolute left-3 top-1/2 transform -translate-y-1/2"
+                style={{ color: colors.text.secondary }}
+              />
+              <input
+                className="w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-3 transition-colors"
+                style={{
+                  backgroundColor: colors.input.background,
+                  borderColor: colors.input.border,
+                  color: colors.text.primary,
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = colors.input.borderFocus;
+                  e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.primary[100]}`;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = colors.input.border;
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+                placeholder="Search by name, email, phone, role..."
+                value={searchKey || ""}
+                onChange={(e) => setSearchKey(e.target.value)}
+              />
             </div>
-            <input
-              type="text"
-              className="block w-full pl-10 pr-3 py-3 border border-gray-300  leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
-              placeholder="Search employees..."
-              value={searchKey || ""}
-              onChange={(e) => setSearchKey(e.target.value)}
-            />
           </div>
         </div>
       </div>
 
-      {/* Table Section */}
-      <div className="bg-white  shadow-sm border border-gray-100 overflow-hidden">
-        <EmployeeTable
-          employees={filteredData}
-          openEmployeeDetailsDrawerHandler={openEmployeeDetailsDrawerHandler}
-          openUpdateEmployeeDrawerHandler={openUpdateEmployeeDrawerHandler}
-          isLoadingEmployees={isLoadingEmployees}
-          approveEmployeeHandler={approveEmployeeHandler}
-          bulkApproveEmployeesHandler={bulkApproveEmployeesHandler}
-        />
-      </div>
+      {isLoadingEmployees ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <Spinner size="xl" color="blue.500" mb={4} />
+            <p style={{ color: colors.text.secondary }}>Loading employees...</p>
+          </div>
+        </div>
+      ) : data.length === 0 ? (
+        <div
+          className="rounded-xl border p-12 text-center"
+          style={{
+            backgroundColor: colors.background.card,
+            borderColor: colors.border.light,
+          }}
+        >
+          <AlertTriangle
+            size={48}
+            className="mx-auto mb-4"
+            style={{ color: colors.warning[500] }}
+          />
+          <h3
+            className="text-lg font-semibold mb-2"
+            style={{ color: colors.text.primary }}
+          >
+            No Employees Found
+          </h3>
+          <p style={{ color: colors.text.secondary }}>
+            No employee data available. Try refreshing the page.
+          </p>
+        </div>
+      ) : (
+        <>
+            <EmployeeTable
+              employees={filteredData}
+              openEmployeeDetailsDrawerHandler={
+                openEmployeeDetailsDrawerHandler
+              }
+              openUpdateEmployeeDrawerHandler={openUpdateEmployeeDrawerHandler}
+              isLoadingEmployees={false}
+              approveEmployeeHandler={approveEmployeeHandler}
+              bulkApproveEmployeesHandler={bulkApproveEmployeesHandler}
+            />
+        </>
+      )}
     </div>
   );
 };
