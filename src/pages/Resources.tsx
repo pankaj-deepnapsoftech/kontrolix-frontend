@@ -188,7 +188,7 @@ const Resources = () => {
                 Resource Management
               </h1>
               <p className="text-gray-600 mt-1">
-                Manage resources and approvals efficiently
+                Manage Resources.
               </p>
             </div>
           </div>
