@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 
 import {
@@ -10,6 +9,8 @@ import {
   Th,
   Thead,
   Tr,
+  Badge,
+  Spinner,
 } from "@chakra-ui/react";
 import { useEffect } from "react";
 import moment from "moment";
@@ -24,7 +25,6 @@ import Loading from "../../ui/Loading";
 import EmptyData from "../../ui/emptyData";
 import { colors } from "../../theme/colors";
 import { useCookies } from "react-cookie";
-import axios from "axios";
 
 const capitalizeWords = (str: string | undefined | null): string => {
   if (!str) return "";
@@ -65,7 +65,8 @@ const ProductTable: React.FC<ProductTableProps> = ({
       {
         Header: "Resource",
         accessor: "resource",
-        Cell: ({ value }: { value: any }) => capitalizeWords(value?.name) || "N/A",
+        Cell: ({ value }: { value: any }) =>
+          capitalizeWords(value?.name) || "N/A",
       },
       {
         Header: "Category",
@@ -80,7 +81,6 @@ const ProductTable: React.FC<ProductTableProps> = ({
       { Header: "Product/Service", accessor: "product_or_service" },
       { Header: "UOM", accessor: "uom" },
 
-     
       { Header: "Last Change", accessor: "change" },
       { Header: "Min stock", accessor: "min_stock" },
       { Header: "Max stock", accessor: "max_stock" },
@@ -91,8 +91,6 @@ const ProductTable: React.FC<ProductTableProps> = ({
   );
   const [showDeletePage, setshowDeletePage] = useState(false);
   const [deleteId, setdeleteId] = useState("");
-
-
 
   // Bulk selection states
   const [selectedProducts, setSelectedProducts] = useState([]);
@@ -141,8 +139,6 @@ const ProductTable: React.FC<ProductTableProps> = ({
     }
   };
 
-
-
   const handleBulkDelete = async () => {
     if (
       isBulkDeleting ||
@@ -166,7 +162,10 @@ const ProductTable: React.FC<ProductTableProps> = ({
   // Close modal when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target as Node)
+      ) {
         setIsLatestPriceModalOpen(null);
       }
     };
@@ -176,60 +175,51 @@ const ProductTable: React.FC<ProductTableProps> = ({
     };
   }, []);
 
- 
-
   const isAllSelected =
     page.length > 0 && selectedProducts.length === page.length;
   const isIndeterminate =
     selectedProducts.length > 0 && selectedProducts.length < page.length;
 
   return (
-    <div className="p-6">
+    <div>
       {isLoadingProducts && (
         <div className="flex items-center justify-center py-20">
-          <div className="flex items-center gap-3">
-            <div
-              className="animate-spin h-8 w-8 border-b-2"
-              style={{ borderColor: colors.primary[500] }}
-            ></div>
-            <span
-              className="font-medium"
-              style={{ color: colors.text.secondary }}
-            >
-              Loading products...
-            </span>
+          <div className="text-center">
+            <Spinner size="xl" color="blue.500" mb={4} />
+            <p style={{ color: colors.text.secondary }}>Loading products...</p>
           </div>
         </div>
       )}
 
       {!isLoadingProducts && dataProducts.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div
-            className= "p-6 mb-4"
-            style={{ backgroundColor: colors.gray[100] }}
+        <div
+          className="rounded-xl border p-12 text-center"
+          style={{
+            backgroundColor: colors.background.card,
+            borderColor: colors.border.light,
+          }}
+        >
+          <svg
+            className="w-12 h-12 mx-auto mb-4"
+            style={{ color: colors.warning[500] }}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            <svg
-              className="w-12 h-12"
-              style={{ color: colors.gray[400] }}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-              />
-            </svg>
-          </div>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+            />
+          </svg>
           <h3
             className="text-lg font-semibold mb-2"
             style={{ color: colors.text.primary }}
           >
-            No products found
+            No Products Found
           </h3>
-          <p className="max-w-md" style={{ color: colors.text.muted }}>
+          <p style={{ color: colors.text.secondary }}>
             Get started by adding your first product to manage your inventory.
           </p>
         </div>
@@ -237,291 +227,119 @@ const ProductTable: React.FC<ProductTableProps> = ({
 
       {!isLoadingProducts && dataProducts.length > 0 && (
         <>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-6">
+          {/* Table Container - MachineSummary Style */}
+          <div
+            className="rounded-xl border overflow-hidden"
+            style={{
+              backgroundColor: colors.background.card,
+              borderColor: colors.border.light,
+            }}
+          >
+            {/* Table Header Section */}
+            <div
+              className="p-5 border-b flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+              style={{ borderColor: colors.border.light }}
+            >
               <div>
                 <h3
                   className="text-lg font-semibold"
                   style={{ color: colors.text.primary }}
                 >
-                  {dataProducts.length} Product{dataProducts.length !== 1 ? "s" : ""}{" "}
-                  Found
+                  Product Directory
                 </h3>
+                <p
+                  className="text-sm mt-1"
+                  style={{ color: colors.text.secondary }}
+                >
+                  Showing {Math.min(dataProducts.length, pageSize)} of{" "}
+                  {dataProducts.length} product
+                  {dataProducts.length !== 1 ? "s" : ""}
+                </p>
               </div>
 
-              {selectedProducts.length > 0 && (
-                <div className="flex items-center gap-3">
-                    {bulkDeleteProductsHandler && (
-                    <button
-                      onClick={() => setShowBulkDeleteModal(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-colors"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                      Delete Selected ({selectedProducts.length})
-                    </button>
-                  )}
-                  {bulkApproveProductsHandler && selectedProducts.length > 0 && (
-                    <button
-                      onClick={() => bulkApproveProductsHandler(selectedProducts)}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
-                    >
-                      Approve Selected ({selectedProducts.length})
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setSelectedProducts([])}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white text-sm font-medium transition-colors"
+              <div className="flex flex-wrap items-center gap-3">
+                
+                <div className="flex items-center gap-2">
+                  <span
+                    className="text-sm"
+                    style={{ color: colors.text.secondary }}
                   >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                    Clear Selection
-                  </button>
+                    Show:
+                  </span>
+                  <Select
+                    onChange={(e) => setPageSize(Number(e.target.value))}
+                    value={pageSize}
+                    size="sm"
+                    width="auto"
+                    borderRadius="lg"
+                    borderColor={colors.border.light}
+                    _focus={{
+                      borderColor: colors.primary[500],
+                      boxShadow: `0 0 0 1px ${colors.primary[500]}`,
+                    }}
+                  >
+                    {[5, 10, 20, 50, 100, 100000].map((size) => (
+                      <option key={size} value={size}>
+                        {size === 100000 ? "All" : size}
+                      </option>
+                    ))}
+                  </Select>
                 </div>
-              )}
+              </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <span
-                className="text-sm font-medium"
-                style={{ color: colors.text.secondary }}
-              >
-                Show:
-              </span>
-              <Select
-                onChange={(e) => setPageSize(Number(e.target.value))}
-                value={pageSize}
-                size="sm"
-                width="auto"
-                borderRadius="lg"
-                borderColor={colors.border.light}
-                _focus={{
-                  borderColor: colors.primary[500],
-                  boxShadow: `0 0 0 1px ${colors.primary[500]}`,
-                }}
-              >
-                {[5, 10, 20, 50, 100, 100000].map((size) => (
-                  <option key={size} value={size}>
-                    {size === 100000 ? "All" : size}
-                  </option>
-                ))}
-              </Select>
-            </div>
-          </div>
-
-          <div
-            className= "shadow-sm overflow-hidden"
-            style={{
-              backgroundColor: colors.background.card,
-              border: `1px solid ${colors.border.light}`,
-            }}
-          >
-            <div className="overflow-auto max-h-[600px]">
-              <table className="w-full">
-                <thead
-                  style={{
-                    backgroundColor: colors.table.header,
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 2,
-                  }}
+            <TableContainer maxH="400px" overflowY="auto">
+              <Table variant="simple" size="sm">
+                <Thead
+                  position="sticky"
+                  top={0}
+                  bg={colors.table.header}
+                  zIndex={1}
                 >
-                  <tr
-                    style={{ borderBottom: `1px solid ${colors.table.border}` }}
-                  >
-                    <th
-                      className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
-                      style={{
-                        color: colors.table.headerText,
-                        width: "60px",
-                        minWidth: "60px",
-                        position: "sticky",
-                        left: 0,
-                        zIndex: 3,
-                        backgroundColor: colors.table.header,
-                      }}
+                  <Tr>
+                    <Th
+                      color={colors.table.headerText}
+                      style={{ width: "40px" }}
                     >
-                      <input
-                        type="checkbox"
-                        checked={isAllSelected}
-                        ref={(el) => {
-                          if (el) el.indeterminate = isIndeterminate;
-                        }}
-                        onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2"
-                      />
-                    </th>
-                    <th
-                      className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
-                      style={{
-                        color: colors.table.headerText,
-                        width: "160px",
-                        minWidth: "160px",
-                      }}
-                    >
-                      Product Id
-                    </th>
-                    <th
-                      className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
-                      style={{
-                        color: colors.table.headerText,
-                        position: "sticky",
-                        top: 0,
-                        left: 60,
-                        zIndex: 3,
-                        backgroundColor: colors.table.header,
-                        width: "160px",
-                        minWidth: "160px",
-                      }}
-                    >
-                      Name
-                    </th>
-                    <th
-                      className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
-                      style={{ color: colors.table.headerText }}
-                    >
-                      Resource
-                    </th>
-
-                    <th
-                      className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
-                      style={{ color: colors.table.headerText }}
-                    >
-                      Created On
-                    </th>
-                    <th
-                      className="px-4 py-3 text-center text-sm font-semibold whitespace-nowrap"
-                      style={{ color: colors.table.headerText }}
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
+                      
+                    </Th>
+                    <Th color={colors.table.headerText}>Product ID</Th>
+                    <Th color={colors.table.headerText}>Name</Th>
+                    <Th color={colors.table.headerText}>Resource</Th>
+                    <Th color={colors.table.headerText}>Created On</Th>
+                    <Th color={colors.table.headerText}>Actions</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
                   {page.map((row, index) => {
                     prepareRow(row);
                     return (
-                      <tr
-                        key={row.id}
-                        className="transition-colors hover:shadow-sm"
-                        style={{
-                          backgroundColor:
-                            index % 2 === 0
-                              ? colors.background.card
-                              : colors.table.stripe,
-                          borderBottom: `1px solid ${colors.table.border}`,
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor =
-                            colors.table.hover;
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor =
-                            index % 2 === 0
-                              ? colors.background.card
-                              : colors.table.stripe;
-                        }}
-                      >
-                        <td
-                          className="px-4 py-3 text-sm whitespace-nowrap"
-                          style={{
-                            color: colors.text.secondary,
-                            width: "60px",
-                            minWidth: "60px",
-                            position: "sticky",
-                            left: 0,
-                            zIndex: 2,
-                            backgroundColor:
-                              index % 2 === 0
-                                ? colors.background.card
-                                : colors.table.stripe,
-                          }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedProducts.includes(
-                              row.original._id
-                            )}
-                            onChange={(e) =>
-                              handleSelectProduct(
-                                row.original._id,
-                                e.target.checked
-                              )
-                            }
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2"
-                          />
-                        </td>
-                        <td
-                          className="px-4 py-3 text-sm font-mono whitespace-nowrap"
-                          style={{
-                            color: colors.text.secondary,
-                            width: "160px",
-                            minWidth: "160px",
-                          }}
-                        >
+                      <Tr key={row.id} _hover={{ bg: colors.table.hover }}>
+                        <Td fontSize="xs" style={{ width: "40px" }}>
+                          
+                        </Td>
+                        <Td fontSize="sm" fontFamily="mono">
                           {row.original.product_id || "N/A"}
-                        </td>
-                        <td
-                          className="px-4 py-3 text-sm font-medium whitespace-nowrap max-w-xs truncate"
-                          style={{
-                            color: colors.text.secondary,
-                            position: "sticky",
-                            left: 60,
-                            zIndex: 1,
-                            backgroundColor:
-                              index % 2 === 0
-                                ? colors.background.card
-                                : colors.table.stripe,
-                            width: "160px",
-                            minWidth: "160px",
-                          }}
-                          title={row.original.name}
-                        >
+                        </Td>
+                        <Td fontSize="sm" fontWeight="medium">
                           {capitalizeWords(row.original.name) || "N/A"}
-                        </td>
-                        <td
-                          className="px-4 py-3 text-sm whitespace-nowrap"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {row.original.resource?.name
-                            ? capitalizeWords(row.original.resource.name)
-                            : "N/A"}
-                        </td>
-
-                        <td
-                          className="px-4 py-3 text-sm whitespace-nowrap"
-                          style={{ color: colors.text.secondary }}
-                        >
+                        </Td>
+                        <Td>
+                          <p  fontSize="xs">
+                            {row.original.resource?.name
+                              ? capitalizeWords(row.original.resource.name)
+                              : "N/A"}
+                          </p>
+                        </Td>
+                        <Td fontSize="xs">
                           {row.original.createdAt
                             ? moment(row.original.createdAt).format(
-                                "DD/MM/YYYY"
+                                "DD MMM YYYY"
                               )
                             : "N/A"}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center justify-center gap-2">
+                        </Td>
+                        <Td fontSize="sm">
+                          <div className="flex items-center gap-1">
                             {openProductDetailsDrawerHandler && (
                               <button
                                 onClick={() =>
@@ -529,7 +347,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                     row.original._id
                                   )
                                 }
-                                className="p-2 transition-all duration-200 hover:shadow-md"
+                                className="p-1.5 rounded-md transition-all duration-200 hover:shadow-md"
                                 style={{
                                   color: colors.secondary[600],
                                   backgroundColor: colors.secondary[50],
@@ -542,9 +360,9 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                   e.currentTarget.style.backgroundColor =
                                     colors.secondary[50];
                                 }}
-                                title="View product details"
+                                title="View Details"
                               >
-                                <MdOutlineVisibility size={16} />
+                                <MdOutlineVisibility size={14} />
                               </button>
                             )}
                             {openUpdateProductDrawerHandler && (
@@ -554,7 +372,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                     row.original._id
                                   )
                                 }
-                                className="p-2 transition-all duration-200 hover:shadow-md"
+                                className="p-1.5 rounded-md transition-all duration-200 hover:shadow-md"
                                 style={{
                                   color: colors.primary[600],
                                   backgroundColor: colors.primary[50],
@@ -567,9 +385,9 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                   e.currentTarget.style.backgroundColor =
                                     colors.primary[50];
                                 }}
-                                title="Edit product"
+                                title="Edit"
                               >
-                                <MdEdit size={16} />
+                                <MdEdit size={14} />
                               </button>
                             )}
                             {deleteProductHandler &&
@@ -579,7 +397,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                     setdeleteId(row.original._id);
                                     setshowDeletePage(true);
                                   }}
-                                  className="p-2 transition-all duration-200 hover:shadow-md"
+                                  className="p-1.5 rounded-md transition-all duration-200 hover:shadow-md"
                                   style={{
                                     color: colors.error[600],
                                     backgroundColor: colors.error[50],
@@ -592,9 +410,9 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                     e.currentTarget.style.backgroundColor =
                                       colors.error[50];
                                   }}
-                                  title="Delete product"
+                                  title="Delete"
                                 >
-                                  <MdDeleteOutline size={16} />
+                                  <MdDeleteOutline size={14} />
                                 </button>
                               )}
                             {approveProductHandler && (
@@ -602,7 +420,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                 onClick={() =>
                                   approveProductHandler(row.original._id)
                                 }
-                                className="p-2 transition-all duration-200 hover:shadow-md"
+                                className="p-1.5 rounded-md transition-all duration-200 hover:shadow-md"
                                 style={{
                                   color: colors.success[600],
                                   backgroundColor: colors.success[50],
@@ -615,111 +433,58 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                   e.currentTarget.style.backgroundColor =
                                     colors.success[50];
                                 }}
-                                title="Approve product"
+                                title="Approve"
                               >
-                                <FcApproval size={16} />
+                                <FcApproval size={14} />
                               </button>
                             )}
                           </div>
-                        </td>
-                      </tr>
+                        </Td>
+                      </Tr>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
+                </Tbody>
+              </Table>
+            </TableContainer>
           </div>
 
-          <div
-            className="flex items-center justify-center px-6 py-4 border-t mt-4"
-            style={{
-              backgroundColor: colors.gray[50],
-              borderColor: colors.border.light,
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <button
-                disabled={!canPreviousPage}
-                onClick={previousPage}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                style={{
-                  color: colors.text.primary,
-                  backgroundColor: colors.background.card,
-                  border: `1px solid ${colors.border.light}`,
-                }}
-                onMouseEnter={(e) => {
-                  if (!e.currentTarget.disabled) {
-                    e.currentTarget.style.backgroundColor = colors.gray[50];
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!e.currentTarget.disabled) {
-                    e.currentTarget.style.backgroundColor =
-                      colors.background.card;
-                  }
-                }}
-              >
-                <svg
-                  className="w-4 h-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-                Previous
-              </button>
-
-              <span
-                className="mx-4 text-sm"
-                style={{ color: colors.text.secondary }}
-              >
+          {/* Pagination */}
+          {pageCount > 1 && (
+            <div
+              className="flex items-center justify-between p-4 mt-4 rounded-lg"
+              style={{ backgroundColor: colors.gray[50] }}
+            >
+              <p className="text-sm" style={{ color: colors.text.secondary }}>
                 Page {pageIndex + 1} of {pageCount}
-              </span>
-
-              <button
-                disabled={!canNextPage}
-                onClick={nextPage}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                style={{
-                  color: colors.text.primary,
-                  backgroundColor: colors.background.card,
-                  border: `1px solid ${colors.border.light}`,
-                }}
-                onMouseEnter={(e) => {
-                  if (!e.currentTarget.disabled) {
-                    e.currentTarget.style.backgroundColor = colors.gray[50];
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!e.currentTarget.disabled) {
-                    e.currentTarget.style.backgroundColor =
-                      colors.background.card;
-                  }
-                }}
-              >
-                Next
-                <svg
-                  className="w-4 h-4 ml-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={!canPreviousPage}
+                  onClick={previousPage}
+                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  style={{
+                    color: colors.text.primary,
+                    backgroundColor: colors.background.card,
+                    border: `1px solid ${colors.border.light}`,
+                  }}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
+                  Previous
+                </button>
+                <button
+                  disabled={!canNextPage}
+                  onClick={nextPage}
+                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  style={{
+                    color: colors.text.primary,
+                    backgroundColor: colors.background.card,
+                    border: `1px solid ${colors.border.light}`,
+                  }}
+                >
+                  Next
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
 
@@ -741,7 +506,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
 
               <div className="mb-6">
                 <div
-                  className= "p-4 mb-4"
+                  className="p-4 mb-4"
                   style={{ backgroundColor: colors.error[50] }}
                 >
                   <div className="flex flex-col items-center gap-3">
@@ -848,7 +613,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
 
               <div className="mb-6">
                 <div
-                  className= "p-4 mb-4"
+                  className="p-4 mb-4"
                   style={{ backgroundColor: colors.error[50] }}
                 >
                   <div className="flex flex-col items-center gap-3">

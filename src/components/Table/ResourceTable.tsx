@@ -16,6 +16,18 @@ import EmptyData from "../../ui/emptyData";
 import { colors } from "../../theme/colors";
 import { useCookies } from "react-cookie";
 import { SquarePen } from "lucide-react";
+import {
+  Select,
+  Table,
+  TableContainer,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+  Badge,
+  Spinner,
+} from "@chakra-ui/react";
 
 interface ResourceTableProps {
   resources: Array<{
@@ -70,7 +82,6 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
     ],
     []
   );
-
 
   const {
     getTableProps,
@@ -145,52 +156,45 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
     selectedResources.length > 0 && selectedResources.length < page.length;
 
   return (
-    <div className="p-6">
+    <div>
       {isLoadingResources && (
         <div className="flex items-center justify-center py-20">
-          <div className="flex items-center gap-3">
-            <div
-              className="animate-spin  h-8 w-8 border-b-2"
-              style={{ borderColor: colors.primary[500] }}
-            ></div>
-            <span
-              className="font-medium"
-              style={{ color: colors.text.secondary }}
-            >
-              Loading resources...
-            </span>
+          <div className="text-center">
+            <Spinner size="xl" color="blue.500" mb={4} />
+            <p style={{ color: colors.text.secondary }}>Loading resources...</p>
           </div>
         </div>
       )}
 
       {!isLoadingResources && resources.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div
-            className=" p-6 mb-4"
-            style={{ backgroundColor: colors.gray[100] }}
+        <div
+          className="rounded-xl border p-12 text-center"
+          style={{
+            backgroundColor: colors.background.card,
+            borderColor: colors.border.light,
+          }}
+        >
+          <svg
+            className="w-12 h-12 mx-auto mb-4"
+            style={{ color: colors.warning[500] }}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            <svg
-              className="w-12 h-12"
-              style={{ color: colors.gray[400] }}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
-              />
-            </svg>
-          </div>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+            />
+          </svg>
           <h3
             className="text-lg font-semibold mb-2"
             style={{ color: colors.text.primary }}
           >
-            No resources found
+            No Resources Found
           </h3>
-          <p className="max-w-md" style={{ color: colors.text.muted }}>
+          <p style={{ color: colors.text.secondary }}>
             Get started by adding your first resource to manage your production
             equipment.
           </p>
@@ -199,284 +203,136 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
 
       {!isLoadingResources && resources.length > 0 && (
         <>
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+          {/* Table Container - MachineSummary Style */}
+          <div
+            className="rounded-xl border overflow-hidden"
+            style={{
+              backgroundColor: colors.background.card,
+              borderColor: colors.border.light,
+            }}
+          >
+            {/* Table Header Section */}
+            <div
+              className="p-5 border-b flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+              style={{ borderColor: colors.border.light }}
+            >
               <div>
                 <h3
                   className="text-lg font-semibold"
                   style={{ color: colors.text.primary }}
                 >
-                  {resources.length} Resource{resources.length !== 1 ? "s" : ""}{" "}
-                  Found
+                  Resource Directory
                 </h3>
               </div>
 
-              {/* Bulk Actions */}
-              {selectedResources.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                  {deleteResourceHandler && (
-                    <button
-                      onClick={() => setShowBulkDeleteModal(true)}
-                      className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm font-medium  transition-colors whitespace-nowrap"
-                    >
-                      <svg
-                        className="w-4 h-4 flex-shrink-0"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                      <span className="hidden sm:inline">Delete Selected</span>
-                      <span className="sm:hidden">Delete</span>
-                      <span className="ml-1">({selectedResources.length})</span>
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setSelectedResources([])}
-                    className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-xs sm:text-sm font-medium  transition-colors whitespace-nowrap"
+              <div className="flex flex-wrap items-center gap-3">
+                
+                <div className="flex items-center gap-2">
+                  <span
+                    className="text-sm"
+                    style={{ color: colors.text.secondary }}
                   >
-                    <svg
-                      className="w-4 h-4 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                    <span className="hidden sm:inline">Clear Selection</span>
-                    <span className="sm:hidden">Clear</span>
-                  </button>
+                    Show:
+                  </span>
+                  <Select
+                    onChange={(e) => setPageSize(Number(e.target.value))}
+                    value={pageSize}
+                    size="sm"
+                    width="auto"
+                    borderRadius="lg"
+                    borderColor={colors.border.light}
+                    _focus={{
+                      borderColor: colors.primary[500],
+                      boxShadow: `0 0 0 1px ${colors.primary[500]}`,
+                    }}
+                  >
+                    {[5, 10, 20, 50, 100, 100000].map((size) => (
+                      <option key={size} value={size}>
+                        {size === 100000 ? "All" : size}
+                      </option>
+                    ))}
+                  </Select>
                 </div>
-              )}
+              </div>
             </div>
 
-            <div className="flex items-center gap-3 lg:flex-shrink-0">
-              <span
-                className="text-sm font-medium whitespace-nowrap"
-                style={{ color: colors.text.secondary }}
-              >
-                Show:
-              </span>
-              <select
-                onChange={(e) => setPageSize(Number(e.target.value))}
-                className="px-3 py-2 text-sm  border transition-colors min-w-0"
-                value={pageSize}
-                style={{
-                  backgroundColor: colors.input.background,
-                  borderColor: colors.border.light,
-                  color: colors.text.primary,
-                }}
-              >
-                {[5, 10, 20, 50, 100, 100000].map((size) => (
-                  <option key={size} value={size}>
-                    {size === 100000 ? "All" : size}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Enhanced Table */}
-          <div
-            className=" shadow-sm overflow-hidden"
-            style={{
-              backgroundColor: colors.background.card,
-              border: `1px solid ${colors.border.light}`,
-            }}
-          >
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead style={{ backgroundColor: colors.table.header }}>
-                  <tr
-                    style={{ borderBottom: `1px solid ${colors.table.border}` }}
-                  >
+            <TableContainer maxH="400px" overflowY="auto">
+              <Table variant="simple" size="sm">
+                <Thead
+                  position="sticky"
+                  top={0}
+                  bg={colors.table.header}
+                  zIndex={1}
+                >
+                  <Tr>
                     {cookies?.role === "admin" && (
-                      <th
-                        className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
-                        style={{
-                          color: colors.table.headerText,
-                          width: "60px",
-                          minWidth: "60px",
-                        }}
+                      <Th
+                        color={colors.table.headerText}
+                        style={{ width: "40px" }}
                       >
-                        <input
-                          type="checkbox"
-                          checked={isAllSelected}
-                          ref={(el) => {
-                            if (el) el.indeterminate = isIndeterminate;
-                          }}
-                          onChange={(e) => handleSelectAll(e.target.checked)}
-                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300  focus:ring-blue-500 focus:ring-2"
-                        />
-                      </th>
+                        
+                      </Th>
                     )}
-                    <th
-                      className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
-                      style={{ color: colors.table.headerText }}
-                    >
-                      Custom Id
-                    </th>
-                    <th
-                      className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
-                      style={{ color: colors.table.headerText }}
-                    >
-                     Machine Name
-                    </th>
-                    <th
-                      className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
-                      style={{ color: colors.table.headerText }}
-                    >
-                      Type
-                    </th>
-                    <th
-                      className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
-                      style={{ color: colors.table.headerText }}
-                    >
-                      Specification
-                    </th>
-                    <th
-                      className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
-                      style={{ color: colors.table.headerText }}
-                    >
-                      Created On
-                    </th>
-                    <th
-                      className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap"
-                      style={{ color: colors.table.headerText }}
-                    >
-                      Last Updated
-                    </th>
+                    <Th color={colors.table.headerText}>Custom ID</Th>
+                    <Th color={colors.table.headerText}>Machine Name</Th>
+                    <Th color={colors.table.headerText}>Type</Th>
+                    <Th color={colors.table.headerText}>Specification</Th>
+                    <Th color={colors.table.headerText}>Created On</Th>
+                    <Th color={colors.table.headerText}>Last Updated</Th>
                     {cookies?.role === "admin" && (
-                      <th
-                        className="px-4 py-3 text-center text-sm font-semibold whitespace-nowrap"
-                        style={{ color: colors.table.headerText }}
-                      >
-                        Actions
-                      </th>
+                      <Th color={colors.table.headerText}>Actions</Th>
                     )}
-                  </tr>
-                </thead>
-                <tbody>
+                  </Tr>
+                </Thead>
+                <Tbody>
                   {page.map((row: any, index) => {
                     prepareRow(row);
                     return (
-                      <tr
-                        key={row.id}
-                        className="transition-colors hover:shadow-sm"
-                        style={{
-                          backgroundColor:
-                            index % 2 === 0
-                              ? colors.background.card
-                              : colors.table.stripe,
-                          borderBottom: `1px solid ${colors.table.border}`,
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor =
-                            colors.table.hover;
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor =
-                            index % 2 === 0
-                              ? colors.background.card
-                              : colors.table.stripe;
-                        }}
-                      >
+                      <Tr key={row.id} _hover={{ bg: colors.table.hover }}>
                         {cookies?.role === "admin" && (
-                          <td
-                            className="px-4 py-3 text-sm whitespace-nowrap"
-                            style={{
-                              color: colors.text.secondary,
-                              width: "60px",
-                              minWidth: "60px",
-                            }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedResources.includes(
-                                row.original._id
-                              )}
-                              onChange={(e) =>
-                                handleSelectResource(
-                                  row.original._id,
-                                  e.target.checked
-                                )
-                              }
-                              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300  focus:ring-blue-500 focus:ring-2"
-                            />
-                          </td>
+                          <Td fontSize="xs" style={{ width: "40px" }}>
+                            
+                          </Td>
                         )}
-                        <td
-                          className="px-4 py-3 text-sm font-medium whitespace-nowrap truncate max-w-xs"
-                          style={{ color: colors.text.primary }}
-                          title={row.original?.customId}
-                        >
+                        <Td fontSize="sm" fontFamily="mono">
                           {row.original?.customId || "—"}
-                        </td>
-                        <td
-                          className="px-4 py-3 text-sm font-medium whitespace-nowrap truncate max-w-xs"
-                          style={{ color: colors.text.primary }}
-                          title={row.original.name}
-                        >
+                        </Td>
+                        <Td fontSize="sm" fontWeight="medium">
                           {row.original.name || "—"}
-                        </td>
-                        <td className="px-4 py-3 text-sm whitespace-nowrap">
-                          <span
-                            className="px-2 py-1  text-xs font-medium whitespace-nowrap"
-                            style={{
-                              backgroundColor:
-                                row.original.type === "Machine"
-                                  ? colors.primary[100]
-                                  : colors.secondary[100],
-                              color:
-                                row.original.type === "Machine"
-                                  ? colors.primary[700]
-                                  : colors.secondary[700],
-                            }}
+                        </Td>
+                        <Td>
+                          <p
+                            
+                            fontSize="xs"
                           >
                             {row.original.type}
-                          </span>
-                        </td>
-                        <td
-                          className="px-4 py-3 text-sm whitespace-nowrap truncate max-w-xs"
-                          style={{ color: colors.text.secondary }}
+                          </p>
+                        </Td>
+                        <Td
+                          fontSize="sm"
+                          maxW="200px"
+                          isTruncated
                           title={row.original.specification}
                         >
                           {row.original.specification || "—"}
-                        </td>
-                        <td
-                          className="px-4 py-3 text-sm whitespace-nowrap"
-                          style={{ color: colors.text.secondary }}
-                        >
+                        </Td>
+                        <Td fontSize="xs">
                           {row.original.createdAt
                             ? moment(row.original.createdAt).format(
-                                "DD/MM/YYYY"
+                                "DD MMM YYYY"
                               )
                             : "—"}
-                        </td>
-                        <td
-                          className="px-4 py-3 text-sm whitespace-nowrap"
-                          style={{ color: colors.text.secondary }}
-                        >
+                        </Td>
+                        <Td fontSize="xs">
                           {row.original.updatedAt
                             ? moment(row.original.updatedAt).format(
-                                "DD/MM/YYYY"
+                                "DD MMM YYYY"
                               )
                             : "—"}
-                        </td>
+                        </Td>
                         {cookies?.role === "admin" && (
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <div className="flex items-center justify-center gap-2">
+                          <Td fontSize="sm">
+                            <div className="flex items-center gap-1">
                               {openResourceDetailsDrawerHandler && (
                                 <button
                                   onClick={() =>
@@ -484,7 +340,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                                       row.original._id
                                     )
                                   }
-                                  className="p-2  transition-all duration-200 hover:shadow-md"
+                                  className="p-1.5 rounded-md transition-all duration-200 hover:shadow-md"
                                   style={{
                                     color: colors.secondary[600],
                                     backgroundColor: colors.secondary[50],
@@ -497,9 +353,9 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                                     e.currentTarget.style.backgroundColor =
                                       colors.secondary[50];
                                   }}
-                                  title="View resource details"
+                                  title="View Details"
                                 >
-                                  <MdOutlineVisibility size={16} />
+                                  <MdOutlineVisibility size={14} />
                                 </button>
                               )}
                               <button
@@ -507,7 +363,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                                   setEditResource(row.original);
                                   setAddResourceDrawerOpened(true);
                                 }}
-                                className="p-2  transition-all duration-200 hover:shadow-md"
+                                className="p-1.5 rounded-md transition-all duration-200 hover:shadow-md"
                                 style={{
                                   color: colors.primary[600],
                                   backgroundColor: colors.primary[50],
@@ -520,9 +376,9 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                                   e.currentTarget.style.backgroundColor =
                                     colors.primary[50];
                                 }}
-                                title="Edit resource"
+                                title="Edit"
                               >
-                                <MdEdit size={16} />
+                                <MdEdit size={14} />
                               </button>
                               {deleteResourceHandler && (
                                 <button
@@ -530,7 +386,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                                     setdeleteId(row.original._id);
                                     setshowDeletePage(true);
                                   }}
-                                  className="p-2  transition-all duration-200 hover:shadow-md"
+                                  className="p-1.5 rounded-md transition-all duration-200 hover:shadow-md"
                                   style={{
                                     color: colors.error[600],
                                     backgroundColor: colors.error[50],
@@ -543,113 +399,59 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                                     e.currentTarget.style.backgroundColor =
                                       colors.error[50];
                                   }}
-                                  title="Delete resource"
+                                  title="Delete"
                                 >
-                                  <MdDeleteOutline size={16} />
+                                  <MdDeleteOutline size={14} />
                                 </button>
                               )}
                             </div>
-                          </td>
+                          </Td>
                         )}
-                      </tr>
+                      </Tr>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
+                </Tbody>
+              </Table>
+            </TableContainer>
           </div>
 
-          {/* Enhanced Pagination */}
-          <div
-            className="flex items-center justify-center px-6 py-4 border-t mt-4"
-            style={{
-              backgroundColor: colors.gray[50],
-              borderColor: colors.border.light,
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <button
-                disabled={!canPreviousPage}
-                onClick={previousPage}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium  disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                style={{
-                  color: colors.text.primary,
-                  backgroundColor: colors.background.card,
-                  border: `1px solid ${colors.border.light}`,
-                }}
-                onMouseEnter={(e) => {
-                  if (!e.currentTarget.disabled) {
-                    e.currentTarget.style.backgroundColor = colors.gray[50];
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!e.currentTarget.disabled) {
-                    e.currentTarget.style.backgroundColor =
-                      colors.background.card;
-                  }
-                }}
-              >
-                <svg
-                  className="w-4 h-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-                Previous
-              </button>
-
-              <span
-                className="mx-4 text-sm"
-                style={{ color: colors.text.secondary }}
-              >
+          {/* Pagination */}
+          {pageCount > 1 && (
+            <div
+              className="flex items-center justify-between p-4 mt-4 rounded-lg"
+              style={{ backgroundColor: colors.gray[50] }}
+            >
+              <p className="text-sm" style={{ color: colors.text.secondary }}>
                 Page {pageIndex + 1} of {pageCount}
-              </span>
-
-              <button
-                disabled={!canNextPage}
-                onClick={nextPage}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium  disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                style={{
-                  color: colors.text.primary,
-                  backgroundColor: colors.background.card,
-                  border: `1px solid ${colors.border.light}`,
-                }}
-                onMouseEnter={(e) => {
-                  if (!e.currentTarget.disabled) {
-                    e.currentTarget.style.backgroundColor = colors.gray[50];
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!e.currentTarget.disabled) {
-                    e.currentTarget.style.backgroundColor =
-                      colors.background.card;
-                  }
-                }}
-              >
-                Next
-                <svg
-                  className="w-4 h-4 ml-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={!canPreviousPage}
+                  onClick={previousPage}
+                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  style={{
+                    color: colors.text.primary,
+                    backgroundColor: colors.background.card,
+                    border: `1px solid ${colors.border.light}`,
+                  }}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
+                  Previous
+                </button>
+                <button
+                  disabled={!canNextPage}
+                  onClick={nextPage}
+                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  style={{
+                    color: colors.text.primary,
+                    backgroundColor: colors.background.card,
+                    border: `1px solid ${colors.border.light}`,
+                  }}
+                >
+                  Next
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
 

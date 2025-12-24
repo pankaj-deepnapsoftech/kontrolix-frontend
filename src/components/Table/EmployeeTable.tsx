@@ -229,8 +229,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                       <Th
                         color={colors.table.headerText}
                         style={{ width: "40px" }}
-                      >
-                      </Th>
+                      ></Th>
                       {hg.headers.map((column) => (
                         <Th
                           {...column.getHeaderProps(
@@ -262,9 +261,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                         {...row.getRowProps()}
                         _hover={{ bg: colors.table.hover }}
                       >
-                        <Td fontSize="xs" style={{ width: "40px" }}>
-                          
-                        </Td>
+                        <Td fontSize="xs" style={{ width: "40px" }}></Td>
                         {row.cells.map((cell) => (
                           <Td {...cell.getCellProps()} fontSize="sm">
                             {cell.column.id === "createdAt" ||
@@ -275,18 +272,15 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                                 )}
                               </span>
                             ) : cell.column.id === "isVerified" ? (
-                              <Badge
-                                colorScheme={
-                                  row.original.isVerified ? "green" : "red"
-                                }
+                              <p
                                 fontSize="xs"
                               >
                                 {row.original.isVerified
                                   ? "Verified"
                                   : "Pending"}
-                              </Badge>
+                              </p>
                             ) : cell.column.id === "role" ? (
-                              <Badge colorScheme="blue" fontSize="xs">
+                              <p fontSize="xs">
                                 {row.original.isSuper
                                   ? "Super Admin"
                                   : (() => {
@@ -302,7 +296,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                                       }
                                       return r || "No Role";
                                     })()}
-                              </Badge>
+                              </p>
                             ) : (
                               cell.render("Cell")
                             )}

@@ -281,7 +281,7 @@ const MachineSummary: React.FC = () => {
         pressure: item.pressure || 0,
         rpm: item.rpm || 0,
         production: item.production_count || 0,
-      }))
+      }));
   }, [plcData]);
 
   // Brand distribution data for pie chart
@@ -441,7 +441,6 @@ const MachineSummary: React.FC = () => {
         </div>
       ) : (
         <>
-          
           <div
             className="rounded-xl border overflow-hidden"
             style={{
@@ -504,28 +503,18 @@ const MachineSummary: React.FC = () => {
                         })}
                       </Td>
                       <Td>
-                        <Badge colorScheme="blue" fontSize="xs">
-                          {item.plc_brand}
-                        </Badge>
+                        <p fontSize="xs">{item.plc_brand}</p>
                       </Td>
                       <Td fontSize="sm">{item.plc_model}</Td>
                       <Td>
-                        <Badge
-                          colorScheme={item.plc_running ? "green" : "red"}
-                          fontSize="xs"
-                        >
+                        <p fontSize="xs">
                           {item.plc_running ? "Running" : "Stopped"}
-                        </Badge>
+                        </p>
                       </Td>
                       <Td>
-                        <Badge
-                          colorScheme={
-                            item.motor_status === 1 ? "green" : "gray"
-                          }
-                          fontSize="xs"
-                        >
+                        <p fontSize="xs">
                           {item.motor_status === 1 ? "Active" : "Inactive"}
-                        </Badge>
+                        </p>
                       </Td>
                       <Td isNumeric fontSize="sm">
                         {item.temperature?.toFixed(1) || "-"}
