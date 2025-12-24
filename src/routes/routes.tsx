@@ -1,49 +1,9 @@
-import { FaQuoteLeft, FaRegCheckCircle } from "react-icons/fa";
-import { IoDocumentTextOutline, IoStorefrontOutline } from "react-icons/io5";
-import {
-  MdOutlineShoppingCart,
-  MdOutlineSpeed,
-  MdOutlineSell,
-  MdOutlineAttachMoney,
-  MdOutlinePayment,
-  MdOutlineProductionQuantityLimits,
-  MdTask,
-  MdOutlineRefresh,
-} from "react-icons/md";
 import { CgProfile } from "react-icons/cg";
-
-import { RiBillLine } from "react-icons/ri";
-import { TbLockAccess, TbTruckDelivery, TbUsersGroup } from "react-icons/tb";
 import { SlDirection } from "react-icons/sl";
-import { FaHandsHelping } from "react-icons/fa";
-import { SiScrapy } from "react-icons/si";
 import { FaPeopleGroup } from "react-icons/fa6";
-import { BiPurchaseTagAlt } from "react-icons/bi";
-import { VscServerProcess } from "react-icons/vsc";
-import { GiProgression } from "react-icons/gi";
 import Products from "../pages/Products";
-import Approvals from "../pages/Approvals";
-import Stores from "../pages/Stores";
-import Buyers from "../pages/Buyers";
-import Sellers from "../pages/Sellers";
-import BOM from "../pages/BOM";
-
-import UserRole from "../pages/UserRoles";
 import Employees from "../pages/Emloyees";
-import ProformaInvoice from "../pages/ProformaInvoice";
-import Invoice from "../pages/Invoice";
-import Payment from "../pages/Payment";
-// import AccountantDashboard from "../pages/AccountantDashboard";
-import Process from "../pages/Process";
-import IndirectProducts from "../pages/IndirectProducts";
-import WIPProducts from "../pages/WIPProducts";
-import InventoryApprovals from "../pages/InventoryApprovals";
 import Userprofile from "../pages/Userprofile";
-import Sales from "../pages/Sales";
-import Dispatch from "../pages/Dispatch";
-import Parties from "../pages/Parties";
-import { IoIosPeople } from "react-icons/io";
-import Task from "../pages/Task";
 import {
   Box,
   Calendar,
@@ -61,19 +21,9 @@ import {
   BarChart3,
   Activity,
 } from "lucide-react";
-import Dashboard from "../pages/Dashboard";
-import Scrap from "../pages/Scrap";
-import PurchaseOrder from "../pages/PurchaseOrder";
 import Resources from "../pages/Resources";
-import ProductionStatus from "../pages/ProductionStatus";
-// import ProductionDashboard from "../pages/ProductionDashboard";
 import MachineStatus from "../pages/MachineStatus";
-import UpcomingSales from "../pages/UpcomingSales";
-// import DesignerDashboard from "../pages/DesignerDashboard";
-import Sensors from "../pages/Sensors";
-import PlcMachineData from "../pages/PlcMachineData";
-import PlcDemo from "../pages/plcddemo";
-import AddProduct from "../components/Drawers/Product/AddProduct";
+import MachineSummary from "../pages/MachineSummary";
 const routes = [
   {
     name: "Live Data",
@@ -95,6 +45,13 @@ const routes = [
     path: "employee",
     element: <Employees />,
     isSublink: false,
+  },
+  {
+    name: "Machine Data Summary",
+    icon: <Component />,
+    path: "machine-data-summary",
+    element: <MachineSummary />,
+    isSublink: false
   },
   // {
   //   name: "Sensors",

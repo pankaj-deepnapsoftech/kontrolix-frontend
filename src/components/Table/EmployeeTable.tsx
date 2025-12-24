@@ -109,7 +109,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
         <div className="flex items-center justify-center py-20">
           <div className="flex items-center gap-3">
             <div
-              className="animate-spin rounded-full h-8 w-8 border-b-2"
+              className="animate-spin  h-8 w-8 border-b-2"
               style={{ borderColor: colors.primary[500] }}
             ></div>
             <span
@@ -125,7 +125,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
       {!isLoadingEmployees && employees.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div
-            className="rounded-full p-6 mb-4"
+            className=" p-6 mb-4"
             style={{ backgroundColor: colors.gray[100] }}
           >
             <svg
@@ -200,7 +200,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
 
           {/* Enhanced Table */}
           <div
-            className="rounded-xl shadow-sm"
+            className=" shadow-sm"
             style={{
               backgroundColor: colors.background.card,
               border: `1px solid ${colors.border.light}`,
@@ -338,7 +338,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                                 )
                               ) : cell.column.id === "isVerified" ? (
                                 <span
-                                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium shadow-sm"
+                                  className="inline-flex items-center px-3 py-1  text-sm font-medium shadow-sm"
                                   style={{
                                     backgroundColor: row.original.isVerified
                                       ? colors.success[100]
@@ -383,7 +383,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                                 </span>
                               ) : cell.column.id === "role" ? (
                                 <span
-                                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium shadow-sm"
+                                  className="inline-flex items-center px-3 py-1  text-sm font-medium shadow-sm"
                                   style={{
                                     background: `linear-gradient(to right, ${colors.primary[500]}, ${colors.primary[600]})`,
                                     color: colors.text.inverse,
@@ -427,7 +427,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                                       row.original._id
                                     )
                                   }
-                                  className="p-2 rounded-lg transition-all duration-200 hover:shadow-md"
+                                  className="p-2  transition-all duration-200 hover:shadow-md"
                                   style={{
                                     color: colors.secondary[600],
                                     backgroundColor: colors.secondary[50],
@@ -470,7 +470,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                                       row.original._id
                                     )
                                   }
-                                  className="p-2 rounded-lg transition-all duration-200 hover:shadow-md"
+                                  className="p-2  transition-all duration-200 hover:shadow-md"
                                   style={{
                                     color: colors.primary[600],
                                     backgroundColor: colors.primary[50],
@@ -505,7 +505,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                                   onClick={() =>
                                     deleteEmployeeHandler(row.original._id)
                                   }
-                                  className="p-2 rounded-lg transition-all duration-200 hover:shadow-md"
+                                  className="p-2  transition-all duration-200 hover:shadow-md"
                                   style={{
                                     color: colors.error[600],
                                     backgroundColor: colors.error[50],
@@ -540,7 +540,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                                   onClick={() =>
                                     approveEmployeeHandler(row.original._id)
                                   }
-                                  className="p-2 rounded-lg transition-all duration-200 hover:shadow-md"
+                                  className="p-2  transition-all duration-200 hover:shadow-md"
                                   style={{
                                     color: colors.success[600],
                                     backgroundColor: colors.success[50],
@@ -576,13 +576,13 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                   if (bulkApproveEmployeesHandler) bulkApproveEmployeesHandler(selectedEmployees);
                   else if (approveEmployeeHandler) selectedEmployees.forEach((id) => approveEmployeeHandler(id));
                 }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium  transition-colors"
               >
                 Approve Selected ({selectedEmployees.length})
               </button>
               <button
                 onClick={() => setSelectedEmployees([])}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white text-sm font-medium rounded-lg transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white text-sm font-medium  transition-colors"
               >
                 Clear Selection
               </button>
@@ -601,7 +601,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
               <button
                 disabled={!canPreviousPage}
                 onClick={previousPage}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium  disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                 style={{
                   color: colors.text.primary,
                   backgroundColor: colors.background.card,
@@ -645,7 +645,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                       onClick={() => {
                         /* Add page navigation logic if needed */
                       }}
-                      className="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+                      className="px-3 py-2 text-sm font-medium  transition-all duration-200"
                       style={{
                         backgroundColor: isActive
                           ? colors.primary[500]
@@ -676,7 +676,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
               <button
                 disabled={!canNextPage}
                 onClick={nextPage}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium  disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                 style={{
                   color: colors.text.primary,
                   backgroundColor: colors.background.card,

@@ -171,24 +171,6 @@ const ProductDetails = ({
               </div>
             )}
 
-            {/* Category */}
-            {product.category && (
-              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                <FiPackage size={20} style={{ color: colors.text.secondary }} />
-                <div>
-                  <p
-                    className="text-sm"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    Category
-                  </p>
-                  <p fontSize="sm" mt={1}>
-                    {product.category}
-                  </p>
-                </div>
-              </div>
-            )}
-
             {/* Resource Details */}
             <div
               className="p-4 rounded-lg border"
