@@ -146,7 +146,6 @@ const MachineSummary: React.FC = () => {
   const [plcData, setPlcData] = useState<PlcDataItem[]>([]);
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
-  // Fetch PLC data
   const fetchPlcData = async () => {
     setIsLoading(true);
     try {
@@ -283,7 +282,6 @@ const MachineSummary: React.FC = () => {
         rpm: item.rpm || 0,
         production: item.production_count || 0,
       }))
-      .slice(-20); // Last 20 records for chart
   }, [plcData]);
 
   // Brand distribution data for pie chart
@@ -461,12 +459,6 @@ const MachineSummary: React.FC = () => {
               >
                 Recent Machine Data
               </h3>
-              <p
-                className="text-sm mt-1"
-                style={{ color: colors.text.secondary }}
-              >
-                Showing latest {Math.min(plcData.length, 20)} records
-              </p>
             </div>
             <TableContainer maxH="400px" overflowY="auto">
               <Table variant="simple" size="sm">
@@ -497,7 +489,7 @@ const MachineSummary: React.FC = () => {
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {plcData.slice(0, 20).map((item, index) => (
+                  {plcData.map((item, index) => (
                     <Tr
                       key={item._id || index}
                       _hover={{ bg: colors.table.hover }}
