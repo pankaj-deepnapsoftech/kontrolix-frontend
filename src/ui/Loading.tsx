@@ -1,4 +1,3 @@
-import loading from "../assets/gifs/loading.gif";
 import { colors } from "../theme/colors";
 
 const Loading: React.FC = () => {
@@ -15,7 +14,7 @@ const Loading: React.FC = () => {
           boxShadow: colors.shadow.md,
         }}
       >
-        <img className="w-12 h-12 mx-auto mb-4" src={loading} alt="loading" />
+        <img className="w-12 h-12 mx-auto mb-4" src="/loading.gif" alt="loading" />
         <p
           className="text-sm font-medium text-center"
           style={{ color: colors.text.secondary }}

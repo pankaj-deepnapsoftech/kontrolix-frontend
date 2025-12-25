@@ -58,7 +58,7 @@ const MachineStatus: React.FC = () => {
   const [cookies] = useCookies();
 
   const BACKEND_API_BASE =
-    (process as any)?.env?.REACT_APP_BACKEND_URL || "http://192.168.1.33:8085/api/";
+    (process as any)?.env?.REACT_APP_BACKEND_URL || "http://192.168.1.33:9023/api/";
   const machineApiUrl =
     (BACKEND_API_BASE.endsWith("/") ? BACKEND_API_BASE : BACKEND_API_BASE + "/") + "plc/all";
   const socketUrl = BACKEND_API_BASE.replace(/\/api\/?$/, "");
@@ -253,7 +253,7 @@ const MachineStatus: React.FC = () => {
   const fetchAssignments = useCallback(async () => {
     try {
       const resp = await fetch(
-        (process.env.REACT_APP_BACKEND_URL || "http://localhost:8085/api/") +
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:9023/api/") +
           "resources/assignments/all",
         {
           method: "GET",
@@ -283,7 +283,7 @@ const MachineStatus: React.FC = () => {
   const fetchResources = useCallback(async () => {
     try {
       const resp = await fetch(
-        (process.env.REACT_APP_BACKEND_URL || "http://localhost:8085/api/") +
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:9023/api/") +
           "resources",
         {
           method: "GET",
@@ -313,7 +313,7 @@ const MachineStatus: React.FC = () => {
       if (!resourceIdToName || Object.keys(resourceIdToName).length === 0)
         return;
       const resp = await fetch(
-        (process.env.REACT_APP_BACKEND_URL || "http://localhost:8085/api/") +
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:9023/api/") +
           "product/all",
         {
           method: "GET",

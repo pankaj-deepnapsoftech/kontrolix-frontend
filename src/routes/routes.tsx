@@ -108,13 +108,13 @@ const routes = [
     element: <MachineInfo />,
     isSublink: false,
   },
-  {
-    name: "Stoppage Info",
-    icon: <MdOutlineSpeed />,
-    path: "stoppage-info",
-    element: <StoppageInfo />,
-    isSublink: false,
-  },
+  // {
+  //   name: "Stoppage Info",
+  //   icon: <MdOutlineSpeed />,
+  //   path: "stoppage-info",
+  //   element: <StoppageInfo />,
+  //   isSublink: false,
+  // },
   //   {
   //     name: "Merchant",
   //     icon: <IoIosPeople />,
