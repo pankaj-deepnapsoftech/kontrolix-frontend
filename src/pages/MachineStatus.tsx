@@ -196,7 +196,13 @@ const MachineStatus: React.FC = () => {
     async (machineKey: string = "all") => {
       setIsLoading(true);
       try {
-        const response = await fetch(machineApiUrl);
+        const response = await fetch(machineApiUrl, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+        });
 
         if (!response.ok) {
           throw new Error(`Failed to fetch PLC data (status ${response.status})`);
@@ -225,18 +231,24 @@ const MachineStatus: React.FC = () => {
         setIsLoading(false);
       }
     },
-    [toast, machineApiUrl]
+    [toast, machineApiUrl, cookies]
   );
 
   const fetchPlcBrands = useCallback(async () => {
     try {
       const base = BACKEND_API_BASE.endsWith("/") ? BACKEND_API_BASE : BACKEND_API_BASE + "/";
-      const resp = await fetch(base + "plc/brands");
+      const resp = await fetch(base + "plc/brands", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${cookies?.access_token}`,
+        },
+      });
       const json = await resp.json();
       const arr = Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : [];
       setAllBrands(arr.filter((x) => typeof x === "string"));
     } catch (_) {}
-  }, [BACKEND_API_BASE]);
+  }, [BACKEND_API_BASE, cookies]);
 
   const fetchAssignments = useCallback(async () => {
     try {
@@ -942,7 +954,17 @@ const MachineStatus: React.FC = () => {
               </SimpleGrid>
             ) : (
               <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
-                {filteredData.map((item: any, index: number) => (
+                {filteredData.map((item: any, index: number) => {
+                  // Check if data is older than 10 seconds
+                  const ts = item.rawTimestamp ? new Date(item.rawTimestamp).getTime() : 0;
+                  const ageSec = ts > 0 ? (Date.now() - ts) / 1000 : Infinity;
+                  const isDataStale = ageSec > 10;
+                  
+                  // Override status if data is stale
+                  const displayPlcRunning = isDataStale ? false : item.plcRunning;
+                  const displayMotorStatus = isDataStale ? 0 : item.motorStatus;
+
+                  return (
                   <Card
                     key={index}
                     variant="elevated"
@@ -1135,12 +1157,12 @@ const MachineStatus: React.FC = () => {
                             </Text>
                             <Badge
                               colorScheme={
-                                item.motorStatus === 1 ? "green" : "red"
+                                displayMotorStatus === 1 ? "green" : "red"
                               }
                               variant="solid"
                               size="sm"
                             >
-                              {item.motorStatus === 1 ? "ON" : "OFF"}
+                              {displayMotorStatus === 1 ? "ON" : "OFF"}
                             </Badge>
                           </Box>
                           <Box textAlign="center">
@@ -1164,18 +1186,19 @@ const MachineStatus: React.FC = () => {
                               PLC
                             </Text>
                             <Badge
-                              colorScheme={item.plcRunning ? "green" : "red"}
+                              colorScheme={displayPlcRunning ? "green" : "red"}
                               variant="solid"
                               size="sm"
                             >
-                              {item.plcRunning ? "Running" : "Stopped"}
+                              {displayPlcRunning ? "Running" : "Stopped"}
                             </Badge>
                           </Box>
                         </HStack>
                       </Box>
                     </CardBody>
                   </Card>
-                ))}
+                  );
+                })}
               </SimpleGrid>
             )}
           </CardBody>

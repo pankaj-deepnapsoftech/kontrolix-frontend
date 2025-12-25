@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useCookies } from "react-cookie";
+import Pagination from "../pagination/Pagination";
 import {
   Box,
   Select,
@@ -139,12 +140,20 @@ const StatCard: React.FC<StatCardProps> = ({
   </div>
 );
 
-const MachineSummary: React.FC = () => {
+const MachineHistory: React.FC = () => {
   const [cookies] = useCookies();
   const [period, setPeriod] = useState<string>("weekly");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [plcData, setPlcData] = useState<PlcDataItem[]>([]);
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [page, setPage] = useState(1);
+  const [assignmentsMap, setAssignmentsMap] = useState<any>({});
+  const [productsByResource, setProductsByResource] = useState<any>({});
+  const [resourceIdToName, setResourceIdToName] = useState<any>({});
+  const LIMIT = 10;
+  
+  const norm = (s: any) => String(s || "").trim().toLowerCase();
+
 
   const fetchPlcData = async () => {
     setIsLoading(true);
@@ -192,8 +201,23 @@ const MachineSummary: React.FC = () => {
         }
       );
 
+      // Check if response is OK
       if (!response.ok) {
+        // Try to parse error message from JSON response
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Export failed");
+        }
         throw new Error("Export failed");
+      }
+
+      // Check if response is actually a file (Excel)
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("spreadsheet")) {
+        // If not a file, try to parse as JSON error
+        const errorData = await response.json();
+        throw new Error(errorData.message || "No data available to download");
       }
 
       const blob = await response.blob();
@@ -213,9 +237,128 @@ const MachineSummary: React.FC = () => {
     }
   };
 
+  // Fetch assignments
+  const fetchAssignments = async () => {
+    try {
+      const resp = await fetch(
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:8085/api/") +
+          "resources/assignments/all",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+        }
+      );
+      const json = await resp.json();
+      if (!json.success) return;
+      const map: any = {};
+      (json.assignments || []).forEach((a: any) => {
+        const key = a?.resource?.name;
+        const names = (a?.employees || []).map(
+          (e: any) =>
+            [e?.first_name, e?.last_name].filter(Boolean).join(" ") ||
+            e?.email ||
+            ""
+        );
+        if (key) map[key] = names;
+      });
+      setAssignmentsMap(map);
+    } catch (_) {}
+  };
+
+  // Fetch resources
+  const fetchResources = async () => {
+    try {
+      const resp = await fetch(
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:8085/api/") +
+          "resources",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+        }
+      );
+      const json = await resp.json();
+      const list = Array.isArray(json?.resources)
+        ? json.resources
+        : Array.isArray(json)
+        ? json
+        : [];
+      const idMap: any = {};
+      list.forEach((r: any) => {
+        if (r?._id && r?.name) {
+          idMap[r._id] = norm(r.name);
+        }
+      });
+      setResourceIdToName(idMap);
+    } catch (_) {}
+  };
+
+  // Fetch products
+  const fetchProductsAll = async () => {
+    try {
+      if (!resourceIdToName || Object.keys(resourceIdToName).length === 0)
+        return;
+      const resp = await fetch(
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:8085/api/") +
+          "product/all",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+        }
+      );
+      const json = await resp.json();
+      if (!json.success) return;
+      const grouped: any = {};
+      (json.products || []).forEach((p: any) => {
+        let key;
+        // Handle both populated resource object and ID string
+        if (p?.resource && typeof p.resource === "object" && p.resource.name) {
+          key = norm(p.resource.name);
+        } else {
+          const resId = p?.resource;
+          key = resourceIdToName[resId];
+        }
+
+        if (!key) return;
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(p?.name);
+      });
+      setProductsByResource(grouped);
+    } catch (_) {}
+  };
+
+  useEffect(() => {
+    fetchAssignments();
+    fetchResources();
+  }, []);
+
+  useEffect(() => {
+    if (Object.keys(resourceIdToName || {}).length > 0) {
+      fetchProductsAll();
+    }
+  }, [resourceIdToName]);
+
   useEffect(() => {
     fetchPlcData();
   }, [period]);
+
+  const paginatedData = React.useMemo(() => {
+  const startIndex = (page - 1) * LIMIT;
+  const endIndex = startIndex + LIMIT;
+  return plcData.slice(startIndex, endIndex);
+}, [plcData, page]);
+
+const hasNextPage = page * LIMIT < plcData.length;
+
+useEffect(() => {
+  setPage(1);
+}, [period]);
+
 
   // Calculate statistics
   const stats = React.useMemo(() => {
@@ -346,7 +489,7 @@ const MachineSummary: React.FC = () => {
                 className="text-2xl font-bold"
                 style={{ color: colors.text.primary }}
               >
-                Machine Data Summary
+                Machine History
               </h1>
               <p
                 className="text-sm mt-1"
@@ -467,30 +610,32 @@ const MachineSummary: React.FC = () => {
                   bg={colors.table.header}
                   zIndex={1}
                 >
-                  <Tr>
-                    <Th></Th>
-                    <Th color={colors.table.headerText}>Timestamp</Th>
-                    <Th color={colors.table.headerText}>Brand</Th>
-                    <Th color={colors.table.headerText}>Model</Th>
-                    <Th color={colors.table.headerText}>Status</Th>
-                    <Th color={colors.table.headerText}>Motor</Th>
-                    <Th color={colors.table.headerText} isNumeric>
-                      Temp (°C)
-                    </Th>
-                    <Th color={colors.table.headerText} isNumeric>
-                      Pressure
-                    </Th>
-                    <Th color={colors.table.headerText} isNumeric>
-                      RPM
-                    </Th>
-                    <Th color={colors.table.headerText} isNumeric>
-                      Production
-                    </Th>
-                    <Th></Th>
-                  </Tr>
+                <Tr>
+                  <Th></Th>
+                  <Th color={colors.table.headerText}>Timestamp</Th>
+                  <Th color={colors.table.headerText}>Brand</Th>
+                  <Th color={colors.table.headerText}>Model</Th>
+                  <Th color={colors.table.headerText}>Status</Th>
+                  <Th color={colors.table.headerText}>Motor</Th>
+                  <Th color={colors.table.headerText}>Assigned</Th>
+                  <Th color={colors.table.headerText}>Product</Th>
+                  <Th color={colors.table.headerText} isNumeric>
+                    Temp (°C)
+                  </Th>
+                  <Th color={colors.table.headerText} isNumeric>
+                    Pressure
+                  </Th>
+                  <Th color={colors.table.headerText} isNumeric>
+                    RPM
+                  </Th>
+                  <Th color={colors.table.headerText} isNumeric>
+                    Production
+                  </Th>
+                  <Th></Th>
+                </Tr>
                 </Thead>
                 <Tbody>
-                  {plcData.map((item, index) => (
+                  {paginatedData.map((item, index) => (
                     <Tr
                       key={item._id || index}
                       _hover={{ bg: colors.table.hover }}
@@ -519,6 +664,18 @@ const MachineSummary: React.FC = () => {
                           {item.motor_status === 1 ? "Active" : "Inactive"}
                         </p>
                       </Td>
+                      <Td fontSize="xs">
+                        {Array.isArray(assignmentsMap[item.plc_brand]) &&
+                        assignmentsMap[item.plc_brand].length > 0
+                          ? assignmentsMap[item.plc_brand].join(", ")
+                          : "-"}
+                      </Td>
+                      <Td fontSize="xs">
+                        {Array.isArray(productsByResource[norm(item.plc_brand)]) &&
+                        productsByResource[norm(item.plc_brand)].length > 0
+                          ? productsByResource[norm(item.plc_brand)].join(", ")
+                          : "-"}
+                      </Td>
                       <Td isNumeric fontSize="sm">
                         {item.temperature?.toFixed(1) || "-"}
                       </Td>
@@ -537,6 +694,13 @@ const MachineSummary: React.FC = () => {
                 </Tbody>
               </Table>
             </TableContainer>
+
+            <Pagination
+  page={page}
+  setPage={setPage}
+  hasNextpage={hasNextPage}
+/>
+
           </div>
         </>
       )}
@@ -544,4 +708,4 @@ const MachineSummary: React.FC = () => {
   );
 };
 
-export default MachineSummary;
+export default MachineHistory;

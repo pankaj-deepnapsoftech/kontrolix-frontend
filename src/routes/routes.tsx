@@ -23,7 +23,11 @@ import {
 } from "lucide-react";
 import Resources from "../pages/Resources";
 import MachineStatus from "../pages/MachineStatus";
-import MachineSummary from "../pages/MachineSummary";
+import MachineHistory from "../pages/MachineHistory";
+import { TbLockAccess } from "react-icons/tb";
+import MachineInfo from "../pages/MachineInfo";
+import { MdOutlineSpeed } from "react-icons/md";
+import StoppageInfo from "../pages/StoppageInfo";
 const routes = [
   {
     name: "Live Data",
@@ -47,10 +51,10 @@ const routes = [
     isSublink: false,
   },
   {
-    name: "Machine Data Summary",
+    name: "Machine History",
     icon: <Component />,
-    path: "machine-data-summary",
-    element: <MachineSummary />,
+    path: "machine-history",
+    element: <MachineHistory />,
     isSublink: false
   },
   // {
@@ -95,6 +99,20 @@ const routes = [
     icon: <SlDirection />,
     path: "product",
     element: <Products />,
+    isSublink: false,
+  },
+  {
+    name: "Machine Info",
+    icon: <TbLockAccess />,
+    path: "machine-info",
+    element: <MachineInfo />,
+    isSublink: false,
+  },
+  {
+    name: "Stoppage Info",
+    icon: <MdOutlineSpeed />,
+    path: "stoppage-info",
+    element: <StoppageInfo />,
     isSublink: false,
   },
   //   {
