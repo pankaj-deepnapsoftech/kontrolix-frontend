@@ -1165,7 +1165,7 @@ const MachineStatus: React.FC = () => {
                               {displayMotorStatus === 1 ? "ON" : "OFF"}
                             </Badge>
                           </Box>
-                          <Box textAlign="center">
+                          {/* <Box textAlign="center">
                             <Text fontSize="xs" color="gray.500">
                               Production
                             </Text>
@@ -1180,7 +1180,7 @@ const MachineStatus: React.FC = () => {
                                 ? "Active"
                                 : "Inactive"}
                             </Badge>
-                          </Box>
+                          </Box> */}
                           <Box textAlign="center">
                             <Text fontSize="xs" color="gray.500">
                               PLC
