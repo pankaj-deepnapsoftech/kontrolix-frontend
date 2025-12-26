@@ -138,7 +138,7 @@ const MachineInfo: React.FC = () => {
   const fetchAssignments = async () => {
     try {
       const resp = await fetch(
-        (process.env.REACT_APP_BACKEND_URL || "http://localhost:8085/api/") +
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:9023/api/") +
           "resources/assignments/all",
         {
           method: "GET",
@@ -168,7 +168,7 @@ const MachineInfo: React.FC = () => {
   const fetchResources = async () => {
     try {
       const resp = await fetch(
-        (process.env.REACT_APP_BACKEND_URL || "http://localhost:8085/api/") +
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:9023/api/") +
           "resources",
         {
           method: "GET",
@@ -199,7 +199,7 @@ const MachineInfo: React.FC = () => {
       if (!resourceIdToName || Object.keys(resourceIdToName).length === 0)
         return;
       const resp = await fetch(
-        (process.env.REACT_APP_BACKEND_URL || "http://localhost:8085/api/") +
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:9023/api/") +
           "product/all",
         {
           method: "GET",
