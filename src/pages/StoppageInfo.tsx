@@ -21,8 +21,6 @@ import {
   AlertTriangle,
   Filter,
   AlertCircle,
-  Clock,
-  TrendingDown,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { colors } from "../theme/colors";
@@ -254,25 +252,6 @@ const StoppageInfo: React.FC = () => {
 
   const hasNextPage = page * LIMIT < filteredStoppages.length;
 
-  // Calculate statistics
-  const stats = useMemo(() => {
-    const totalStoppages = filteredStoppages.length;
-    const ongoingStoppages = filteredStoppages.filter((s) => s.is_ongoing).length;
-    const totalDowntime = filteredStoppages.reduce(
-      (sum, s) => sum + (s.duration_seconds || 0),
-      0
-    );
-    const avgDuration =
-      totalStoppages > 0 ? Math.floor(totalDowntime / totalStoppages) : 0;
-
-    return {
-      totalStoppages,
-      ongoingStoppages,
-      totalDowntime: formatDuration(totalDowntime),
-      avgDuration: formatDuration(avgDuration),
-    };
-  }, [filteredStoppages]);
-
   const periodOptions = [
     { value: "daily", label: "Today" },
     { value: "weekly", label: "Last 7 Days" },
@@ -375,105 +354,6 @@ const StoppageInfo: React.FC = () => {
         </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div
-          className="p-5 rounded-xl border"
-          style={{
-            backgroundColor: colors.background.card,
-            borderColor: colors.border.light,
-          }}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <p
-              className="text-sm font-medium"
-              style={{ color: colors.text.secondary }}
-            >
-              Total Stoppages
-            </p>
-            <TrendingDown size={18} style={{ color: colors.error[500] }} />
-          </div>
-          <p
-            className="text-2xl font-bold"
-            style={{ color: colors.text.primary }}
-          >
-            {stats.totalStoppages}
-          </p>
-        </div>
-
-        <div
-          className="p-5 rounded-xl border"
-          style={{
-            backgroundColor: colors.background.card,
-            borderColor: colors.border.light,
-          }}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <p
-              className="text-sm font-medium"
-              style={{ color: colors.text.secondary }}
-            >
-              Ongoing
-            </p>
-            <AlertTriangle size={18} style={{ color: colors.warning[500] }} />
-          </div>
-          <p
-            className="text-2xl font-bold"
-            style={{ color: colors.warning[600] }}
-          >
-            {stats.ongoingStoppages}
-          </p>
-        </div>
-
-        <div
-          className="p-5 rounded-xl border"
-          style={{
-            backgroundColor: colors.background.card,
-            borderColor: colors.border.light,
-          }}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <p
-              className="text-sm font-medium"
-              style={{ color: colors.text.secondary }}
-            >
-              Total Downtime
-            </p>
-            <Clock size={18} style={{ color: colors.error[500] }} />
-          </div>
-          <p
-            className="text-2xl font-bold"
-            style={{ color: colors.error[600] }}
-          >
-            {stats.totalDowntime}
-          </p>
-        </div>
-
-        <div
-          className="p-5 rounded-xl border"
-          style={{
-            backgroundColor: colors.background.card,
-            borderColor: colors.border.light,
-          }}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <p
-              className="text-sm font-medium"
-              style={{ color: colors.text.secondary }}
-            >
-              Avg Duration
-            </p>
-            <Clock size={18} style={{ color: colors.text.secondary }} />
-          </div>
-          <p
-            className="text-2xl font-bold"
-            style={{ color: colors.text.primary }}
-          >
-            {stats.avgDuration}
-          </p>
-        </div>
-      </div>
-
       {/* Stoppage Events Table */}
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
@@ -539,7 +419,6 @@ const StoppageInfo: React.FC = () => {
                   <Th color={colors.table.headerText}>Machine</Th>
                   <Th color={colors.table.headerText}>Stopped At</Th>
                   <Th color={colors.table.headerText}>Started At</Th>
-                  <Th color={colors.table.headerText}>Duration</Th>
                   <Th color={colors.table.headerText}>Status</Th>
                   <Th color={colors.table.headerText} isNumeric>
                     Temp (°C)
@@ -591,19 +470,6 @@ const StoppageInfo: React.FC = () => {
                             second: "2-digit",
                           })
                         : "-"}
-                    </Td>
-                    <Td>
-                      <p
-                        fontSize="sm"
-                        className="font-medium"
-                        style={{
-                          color: stoppage.is_ongoing
-                            ? colors.warning[600]
-                            : colors.text.primary,
-                        }}
-                      >
-                        {stoppage.duration_display || "-"}
-                      </p>
                     </Td>
                     <Td>
                       <p
