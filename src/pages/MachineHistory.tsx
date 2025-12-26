@@ -147,6 +147,7 @@ const MachineHistory: React.FC = () => {
   const [plcData, setPlcData] = useState<PlcDataItem[]>([]);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const [assignmentsMap, setAssignmentsMap] = useState<any>({});
   const [productsByResource, setProductsByResource] = useState<any>({});
   const [resourceIdToName, setResourceIdToName] = useState<any>({});
@@ -159,7 +160,7 @@ const MachineHistory: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}plc/all?period=${period}`,
+        `${process.env.REACT_APP_BACKEND_URL}plc/all?period=${period}&page=${page}&limit=${LIMIT}`,
         {
           method: "GET",
           headers: {
@@ -176,12 +177,14 @@ const MachineHistory: React.FC = () => {
       const result = await response.json();
       if (result.success) {
         setPlcData(result.data || []);
+        setTotalCount(result.total || 0);
       } else {
         throw new Error(result.message || "Failed to fetch data");
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to fetch machine data");
       setPlcData([]);
+      setTotalCount(0);
     } finally {
       setIsLoading(false);
     }
@@ -345,19 +348,17 @@ const MachineHistory: React.FC = () => {
 
   useEffect(() => {
     fetchPlcData();
+  }, [period, page]);
+
+  // Use data directly from API (already paginated)
+  const paginatedData = plcData;
+
+  // Calculate hasNextPage based on total count from server
+  const hasNextPage = page * LIMIT < totalCount;
+
+  useEffect(() => {
+    setPage(1);
   }, [period]);
-
-  const paginatedData = React.useMemo(() => {
-  const startIndex = (page - 1) * LIMIT;
-  const endIndex = startIndex + LIMIT;
-  return plcData.slice(startIndex, endIndex);
-}, [plcData, page]);
-
-const hasNextPage = page * LIMIT < plcData.length;
-
-useEffect(() => {
-  setPage(1);
-}, [period]);
 
 
   // Calculate statistics
