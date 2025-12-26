@@ -86,9 +86,9 @@ const Navigation: React.FC = () => {
         {/* Logo */}
         <div className="border-b border-gray-100 text-center">
           <img
-            src="/android-chrome-192x192.png"
+            src="\companylogo.png"
             alt="Logo"
-            className="w-[100px] sm:w-[120px] ml-5 h-auto "
+            className="w-[200px] sm:w-[200px] ml-5 mt-3 mb-3 h-auto "
           />
         </div>
 
