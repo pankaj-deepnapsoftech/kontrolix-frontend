@@ -66,6 +66,40 @@ const MachineStatus: React.FC = () => {
   // Store API summary data for statistics cards
   const [apiSummaryData, setApiSummaryData] = useState<any>(null);
 
+  // Helper function to calculate machine status based on data age and machine state
+  const calculateMachineStatus = (item: any): string => {
+    const timestamp = item.timestamp ? new Date(item.timestamp) : null;
+    
+    if (!timestamp) {
+      return "stopped";
+    }
+    
+    // Calculate age of data in seconds
+    const ageSec = (Date.now() - timestamp.getTime()) / 1000;
+    
+    // If data is older than 20 seconds, status is stopped
+    if (ageSec > 20) {
+      return "stopped";
+    }
+    
+    // If data is older than 10 seconds, status is idle
+    if (ageSec > 10) {
+      return "idle";
+    }
+    
+    // Otherwise, calculate based on machine state
+    const running = Boolean(item.plc_running) || item.motor_status === 1 || item.production_active === 1;
+    const idleBase = Boolean(item.plc_running) && item.production_active === 0 && item.motor_status === 0;
+    
+    if (running) {
+      return "running";
+    } else if (idleBase) {
+      return "idle";
+    } else {
+      return "stopped";
+    }
+  };
+
   // Transform PLC API array - Group by machine and get latest data per machine
   const transformMachineData = (rows: any[]) => {
     // Group by plc_brand only - one card per brand with latest data
@@ -81,6 +115,9 @@ const MachineStatus: React.FC = () => {
         !existing ||
         new Date(item.timestamp) > new Date(existing.rawTimestamp)
       ) {
+        // Calculate status based on current time (for real-time updates)
+        const status = item.status || calculateMachineStatus(item);
+        
         machineMap.set(machineKey, {
           machineKey,
           deviceId: item.plc_brand,
@@ -96,35 +133,27 @@ const MachineStatus: React.FC = () => {
           motorStatus: item.motor_status ?? 0,
           productionActive: item.production_active ?? 0,
           plcRunning: item.plc_running ?? false,
-          // Status will be set later based on order
-          status: "stopped",
+          status: status,
         });
       }
     });
 
     // Convert to array and sort by latest timestamp (most recent first)
-    const machinesArray = Array.from(machineMap.values()).sort(
+    let machinesArray = Array.from(machineMap.values()).sort(
       (a, b) =>
         new Date(b.rawTimestamp).getTime() - new Date(a.rawTimestamp).getTime()
     );
 
-    machinesArray.forEach((machine) => {
-      const running =
-        Boolean(machine.plcRunning) ||
-        machine.motorStatus === 1 ||
-        machine.productionActive === 1;
-      const idleBase =
-        Boolean(machine.plcRunning) &&
-        machine.productionActive === 0 &&
-        machine.motorStatus === 0;
-      let status = running ? "running" : idleBase ? "idle" : "stopped";
-      const ts =
-        machine.rawTimestamp ? new Date(machine.rawTimestamp).getTime() : 0;
-      const ageSec = ts > 0 ? (Date.now() - ts) / 1000 : Infinity;
-      if (ageSec > 20) status = "stopped";
-      else if (ageSec > 10) status = "idle";
-      machine.status = status;
-    });
+    // Recalculate status for all machines based on current time (for real-time updates)
+    machinesArray = machinesArray.map((machine) => ({
+      ...machine,
+      status: calculateMachineStatus({
+        timestamp: machine.rawTimestamp,
+        plc_running: machine.plcRunning,
+        motor_status: machine.motorStatus,
+        production_active: machine.productionActive,
+      }),
+    }));
 
     const missing = (allBrands || []).filter((b) => !machineMap.has(b));
     missing.forEach((b) => {

@@ -143,6 +143,20 @@ const StoppageInfo: React.FC = () => {
     setPage(1);
   }, [period, selectedMachine]);
 
+  // Format duration in human-readable format
+  const formatDuration = (seconds: number): string => {
+    if (seconds < 60) return `${seconds}s`;
+    if (seconds < 3600) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+    }
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    if (mins === 0) return `${hours}h`;
+    return `${hours}h ${mins}m`;
+  };
+
   // Process status logs to calculate stoppage events and durations
   const stoppageEvents = useMemo(() => {
     const stoppages: StoppageEvent[] = [];
@@ -154,8 +168,9 @@ const StoppageInfo: React.FC = () => {
     );
 
     sortedLogs.forEach((log) => {
-      // Only process PLC running status changes
-      if (log.status_type !== "plc_running") return;
+      // Process both "status" (calculated status including data age) and "plc_running" (legacy) status changes
+      // Prioritize "status" type as it includes data age-based stoppages (10s idle, 20s stopped)
+      if (log.status_type !== "status" && log.status_type !== "plc_running") return;
 
       const machineKey = log.machine_key || `${log.plc_brand}_${log.plc_model}`;
       const logTime = new Date(log.timestamp);
@@ -221,20 +236,6 @@ const StoppageInfo: React.FC = () => {
       (a, b) => new Date(b.stoppage_start).getTime() - new Date(a.stoppage_start).getTime()
     );
   }, [statusLogs]);
-
-  // Format duration in human-readable format
-  const formatDuration = (seconds: number): string => {
-    if (seconds < 60) return `${seconds}s`;
-    if (seconds < 3600) {
-      const mins = Math.floor(seconds / 60);
-      const secs = seconds % 60;
-      return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
-    }
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    if (mins === 0) return `${hours}h`;
-    return `${hours}h ${mins}m`;
-  };
 
   // Filter stoppages by machine
   const filteredStoppages = useMemo(() => {
@@ -536,8 +537,8 @@ const StoppageInfo: React.FC = () => {
                 <Tr>
                   <Th></Th>
                   <Th color={colors.table.headerText}>Machine</Th>
-                  <Th color={colors.table.headerText}>Stoppage Start</Th>
-                  <Th color={colors.table.headerText}>Stoppage End</Th>
+                  <Th color={colors.table.headerText}>Stopped At</Th>
+                  <Th color={colors.table.headerText}>Started At</Th>
                   <Th color={colors.table.headerText}>Duration</Th>
                   <Th color={colors.table.headerText}>Status</Th>
                   <Th color={colors.table.headerText} isNumeric>
