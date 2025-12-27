@@ -56,6 +56,9 @@ interface StoppageEvent {
   pressure?: number;
   rpm?: number;
   production_count?: number;
+  current_status?: string;
+  stopped_at?: string;
+  timestamp?: string;
 }
 
 const StoppageInfo: React.FC = () => {
@@ -65,6 +68,7 @@ const StoppageInfo: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [statusLogs, setStatusLogs] = useState<StatusLog[]>([]);
   const [availableMachines, setAvailableMachines] = useState<string[]>([]);
+  const [currentMachineStatus, setCurrentMachineStatus] = useState<Record<string, { status: string; stopped_at: string | null; timestamp: string }>>({});
   const [page, setPage] = useState(1);
   const LIMIT = 10;
 
@@ -137,8 +141,45 @@ const StoppageInfo: React.FC = () => {
     }
   };
 
+  // Fetch current machine status from /api/plc/all
+  const fetchCurrentMachineStatus = async () => {
+    try {
+      const baseUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:9023/api/";
+      const response = await fetch(
+        `${baseUrl}plc/all?limit=1000`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+          // Create a map of machine_key -> { status, stopped_at, timestamp }
+          const statusMap: Record<string, { status: string; stopped_at: string | null; timestamp: string }> = {};
+          result.data.forEach((item: any) => {
+            const machineKey = `${item.plc_brand}_${item.plc_model}`;
+            statusMap[machineKey] = {
+              status: item.status || "unknown",
+              stopped_at: item.stopped_at || null,
+              timestamp: item.timestamp || "",
+            };
+          });
+          setCurrentMachineStatus(statusMap);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch current machine status:", error);
+    }
+  };
+
   useEffect(() => {
     fetchMachines();
+    fetchCurrentMachineStatus();
   }, []);
 
   useEffect(() => {
@@ -161,6 +202,31 @@ const StoppageInfo: React.FC = () => {
     const mins = Math.floor((seconds % 3600) / 60);
     if (mins === 0) return `${hours}h`;
     return `${hours}h ${mins}m`;
+  };
+
+  // Format date to UTC timezone (12-hour format)
+  const formatToIST = (dateString: string | Date): string => {
+    if (!dateString) return "-";
+    
+    // Parse date - new Date() correctly handles UTC strings ending with Z
+    const date = typeof dateString === "string" ? new Date(dateString) : dateString;
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return "-";
+    }
+    
+    // Convert to UTC and format (12-hour format)
+    return date.toLocaleString("en-IN", {
+      timeZone: "UTC",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
   };
 
   // Process status logs to calculate stoppage events and durations
@@ -407,7 +473,10 @@ const StoppageInfo: React.FC = () => {
 
             <Button
               leftIcon={<RefreshCw size={16} />}
-              onClick={fetchStatusLogs}
+              onClick={() => {
+                fetchStatusLogs();
+                fetchCurrentMachineStatus();
+              }}
               isLoading={isLoading}
               size="sm"
               variant="outline"
@@ -485,6 +554,7 @@ const StoppageInfo: React.FC = () => {
                   <Th color={colors.table.headerText}>Machine</Th>
                   <Th color={colors.table.headerText}>Stopped At</Th>
                   <Th color={colors.table.headerText}>Started At</Th>
+                  <Th color={colors.table.headerText}>Current Status</Th>
                   <Th color={colors.table.headerText}>Status</Th>
                   <Th color={colors.table.headerText} isNumeric>
                     Temp (°C)
@@ -516,26 +586,38 @@ const StoppageInfo: React.FC = () => {
                       </div>
                     </Td>
                     <Td fontSize="xs">
-                      {new Date(stoppage.stoppage_start).toLocaleString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
-                      })}
+                      {formatToIST(stoppage.stoppage_start)}
                     </Td>
                     <Td fontSize="xs">
-                      {stoppage.stoppage_end
-                        ? new Date(stoppage.stoppage_end).toLocaleString("en-IN", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            second: "2-digit",
-                          })
-                        : "-"}
+                      {(() => {
+                        const machineKey = stoppage.machine_key;
+                        const currentStatus = currentMachineStatus[machineKey];
+                        
+                        // If machine is currently running, show timestamp from current status
+                        if (currentStatus && currentStatus.status === "running") {
+                          return currentStatus.timestamp ? formatToIST(currentStatus.timestamp) : "-";
+                        }
+                        
+                        // Otherwise show stoppage_end (when stoppage ended)
+                        return stoppage.stoppage_end ? formatToIST(stoppage.stoppage_end) : "-";
+                      })()}
+                    </Td>
+                    <Td fontSize="xs">
+                      {(() => {
+                        const machineKey = stoppage.machine_key;
+                        const currentStatus = currentMachineStatus[machineKey];
+                        
+                        if (currentStatus) {
+                          if (currentStatus.status === "running") {
+                            // Show "Started" with timestamp in IST
+                            return currentStatus.timestamp ? formatToIST(currentStatus.timestamp) : "-";
+                          } else if (currentStatus.status === "stopped") {
+                            // Show "Stopped At" with stopped_at in IST
+                            return currentStatus.stopped_at ? formatToIST(currentStatus.stopped_at) : "-";
+                          }
+                        }
+                        return "-";
+                      })()}
                     </Td>
                     <Td>
                       <p
