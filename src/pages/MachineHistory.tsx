@@ -215,6 +215,7 @@ const MachineHistory: React.FC = () => {
         throw new Error("Export failed");
       }
 
+      console.log("======",response)
       // Check if response is actually a file (Excel)
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("spreadsheet")) {
@@ -616,7 +617,7 @@ const MachineHistory: React.FC = () => {
                   <Th color={colors.table.headerText}>Timestamp</Th>
                   <Th color={colors.table.headerText}>Brand</Th>
                   <Th color={colors.table.headerText}>Model</Th>
-                  <Th color={colors.table.headerText}>Status</Th>
+                  {/* <Th color={colors.table.headerText}>Status</Th> */}
                   <Th color={colors.table.headerText}>Motor</Th>
                   <Th color={colors.table.headerText}>Assigned</Th>
                   <Th color={colors.table.headerText}>Product</Th>
@@ -655,11 +656,11 @@ const MachineHistory: React.FC = () => {
                         <p fontSize="xs">{item.plc_brand}</p>
                       </Td>
                       <Td fontSize="sm">{item.plc_model}</Td>
-                      <Td>
+                      {/* <Td>
                         <p fontSize="xs">
                           {item.plc_running ? "Running" : "Stopped"}
                         </p>
-                      </Td>
+                      </Td> */}
                       <Td>
                         <p fontSize="xs">
                           {item.motor_status === 1 ? "Active" : "Inactive"}
