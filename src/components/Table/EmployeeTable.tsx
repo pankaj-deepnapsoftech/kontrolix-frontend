@@ -419,7 +419,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                                 </svg>
                               </button>
                             )}
-                            {approveEmployeeHandler && (
+                            {/* {approveEmployeeHandler && (
                               <button
                                 onClick={() =>
                                   approveEmployeeHandler(row.original._id)
@@ -441,7 +441,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                               >
                                 <FcApproval className="w-3.5 h-3.5" />
                               </button>
-                            )}
+                            )} */}
                           </div>
                         </Td>
                       </Tr>

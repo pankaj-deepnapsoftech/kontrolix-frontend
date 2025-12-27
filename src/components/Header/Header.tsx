@@ -27,6 +27,7 @@ const Header: React.FC = () => {
     year: 'numeric' 
   }));
 
+
   const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8096/api/';
 
   // Fetch welcome data from API
@@ -49,6 +50,8 @@ const Header: React.FC = () => {
         });
         
         const data = await response.json();
+
+       
         
         if (data.success) {
           setGreeting(data.greeting);
@@ -68,6 +71,8 @@ const Header: React.FC = () => {
 
     fetchWelcomeData();
   }, [cookie.access_token]);
+
+  
 
   const logoutHandler = () => {
     try {
@@ -107,13 +112,13 @@ const Header: React.FC = () => {
           Upgrade
         </button>
        */}
-          <button
+          {/* <button
             className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors duration-200"
             aria-label="Notifications"
           >
             <IoIosNotifications size={24} />
             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
+          </button> */}
 
      
           <div className="relative">
