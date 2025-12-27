@@ -519,7 +519,8 @@ const StoppageInfo: React.FC = () => {
             No Stoppages Found
           </h3>
           <p style={{ color: colors.text.secondary }}>
-            No machine stoppages found for the selected period. All machines are running smoothly.
+            No machine stoppages found for the selected period. All machines are
+            running smoothly.
           </p>
         </div>
       ) : (
@@ -552,10 +553,11 @@ const StoppageInfo: React.FC = () => {
                 <Tr>
                   <Th></Th>
                   <Th color={colors.table.headerText}>Machine</Th>
-                  <Th color={colors.table.headerText}>Stopped At</Th>
                   <Th color={colors.table.headerText}>Started At</Th>
-                  <Th color={colors.table.headerText}>Current Status</Th>
-                  <Th color={colors.table.headerText}>Status</Th>
+                  <Th color={colors.table.headerText}>Stopped At</Th>
+
+                  {/* <Th color={colors.table.headerText}>Current Status</Th> */}
+                  {/* <Th color={colors.table.headerText}>Status</Th> */}
                   <Th color={colors.table.headerText} isNumeric>
                     Temp (°C)
                   </Th>
@@ -577,49 +579,67 @@ const StoppageInfo: React.FC = () => {
                     <Td></Td>
                     <Td>
                       <div>
-                        <p className="font-medium text-sm" style={{ color: colors.text.primary }}>
+                        <p
+                          className="font-medium text-sm"
+                          style={{ color: colors.text.primary }}
+                        >
                           {stoppage.plc_brand}
                         </p>
-                        <p className="text-xs" style={{ color: colors.text.muted }}>
+                        <p
+                          className="text-xs"
+                          style={{ color: colors.text.muted }}
+                        >
                           {stoppage.plc_model}
                         </p>
                       </div>
                     </Td>
-                    <Td fontSize="xs">
-                      {formatToIST(stoppage.stoppage_start)}
-                    </Td>
+
                     <Td fontSize="xs">
                       {(() => {
                         const machineKey = stoppage.machine_key;
                         const currentStatus = currentMachineStatus[machineKey];
-                        
+
                         // If machine is currently running, show timestamp from current status
-                        if (currentStatus && currentStatus.status === "running") {
-                          return currentStatus.timestamp ? formatToIST(currentStatus.timestamp) : "-";
+                        if (
+                          currentStatus &&
+                          currentStatus.status === "running"
+                        ) {
+                          return currentStatus.timestamp
+                            ? formatToIST(currentStatus.timestamp)
+                            : "-";
                         }
-                        
+
                         // Otherwise show stoppage_end (when stoppage ended)
-                        return stoppage.stoppage_end ? formatToIST(stoppage.stoppage_end) : "-";
+                        return stoppage.stoppage_end
+                          ? formatToIST(stoppage.stoppage_end)
+                          : "-";
                       })()}
                     </Td>
                     <Td fontSize="xs">
+                      {formatToIST(stoppage.stoppage_start)}
+                    </Td>
+                    {/* <Td fontSize="xs">
                       {(() => {
                         const machineKey = stoppage.machine_key;
                         const currentStatus = currentMachineStatus[machineKey];
-                        
+
                         if (currentStatus) {
                           if (currentStatus.status === "running") {
                             // Show "Started" with timestamp in IST
-                            return currentStatus.timestamp ? formatToIST(currentStatus.timestamp) : "-";
+                            return currentStatus.timestamp
+                              ? formatToIST(currentStatus.timestamp)
+                              : "-";
                           } else if (currentStatus.status === "stopped") {
                             // Show "Stopped At" with stopped_at in IST
-                            return currentStatus.stopped_at ? formatToIST(currentStatus.stopped_at) : "-";
+                            return currentStatus.stopped_at
+                              ? formatToIST(currentStatus.stopped_at)
+                              : "-";
                           }
                         }
                         return "-";
                       })()}
-                    </Td>
-                    <Td>
+                    </Td> */}
+                    {/* <Td>
                       <p
                         fontSize="xs"
                         className="px-2 py-1 rounded inline-block"
@@ -634,7 +654,7 @@ const StoppageInfo: React.FC = () => {
                       >
                         {stoppage.is_ongoing ? "Ongoing" : "Resolved"}
                       </p>
-                    </Td>
+                    </Td> */}
                     <Td isNumeric fontSize="sm">
                       {stoppage.temperature?.toFixed(1) || "-"}
                     </Td>
@@ -651,11 +671,7 @@ const StoppageInfo: React.FC = () => {
             </Table>
           </TableContainer>
 
-          <Pagination
-            page={page}
-            setPage={setPage}
-            hasNextpage={hasNextPage}
-          />
+          <Pagination page={page} setPage={setPage} hasNextpage={hasNextPage} />
         </div>
       )}
     </div>
