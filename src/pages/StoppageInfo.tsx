@@ -71,8 +71,9 @@ const StoppageInfo: React.FC = () => {
   // Fetch available machines (brands)
   const fetchMachines = async () => {
     try {
+      const baseUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:9023/api/";
       const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}plc/brands`,
+        `${baseUrl}plc/brands`,
         {
           method: "GET",
           headers: {
@@ -82,14 +83,19 @@ const StoppageInfo: React.FC = () => {
         }
       );
 
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          setAvailableMachines(result.data || []);
-        }
+      if (!response.ok) {
+        throw new Error(`Failed to fetch machines: ${response.status} ${response.statusText}`);
       }
-    } catch (error) {
+
+      const result = await response.json();
+      if (result.success) {
+        setAvailableMachines(result.data || []);
+      } else {
+        throw new Error(result.message || "Failed to fetch machines");
+      }
+    } catch (error: any) {
       console.error("Failed to fetch machines:", error);
+      toast.error(error.message || "Failed to fetch machines. Please check your connection.");
     }
   };
 
@@ -97,7 +103,8 @@ const StoppageInfo: React.FC = () => {
   const fetchStatusLogs = async () => {
     setIsLoading(true);
     try {
-      let url = `${process.env.REACT_APP_BACKEND_URL}plc/status-logs?period=${period}&limit=2000`;
+      const baseUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:9023/api/";
+      let url = `${baseUrl}plc/status-logs?period=${period}&limit=5000`;
       
       if (selectedMachine !== "all") {
         url += `&machine=${selectedMachine}`;
@@ -117,6 +124,7 @@ const StoppageInfo: React.FC = () => {
 
       const result = await response.json();
       if (result.success) {
+        console.log(`Fetched ${result.data?.length || 0} status logs (total_changes: ${result.total_changes || 0})`);
         setStatusLogs(result.data || []);
       } else {
         throw new Error(result.message || "Failed to fetch status logs");
@@ -166,20 +174,74 @@ const StoppageInfo: React.FC = () => {
     );
 
     sortedLogs.forEach((log) => {
-      // Process both "status" (calculated status including data age) and "plc_running" (legacy) status changes
-      // Prioritize "status" type as it includes data age-based stoppages (10s idle, 20s stopped)
-      if (log.status_type !== "status" && log.status_type !== "plc_running") return;
-
       const machineKey = log.machine_key || `${log.plc_brand}_${log.plc_model}`;
       const logTime = new Date(log.timestamp);
 
-      if (log.event_type === "stopped") {
+      // Determine if this log represents a stoppage start or end
+      // Check both event_type and status changes to catch all stoppage events
+      const eventType = (log.event_type || "").toLowerCase();
+      const currentStatus = (log.current_status || "").toLowerCase();
+      const previousStatus = (log.previous_status || "").toLowerCase();
+      const statusType = log.status_type || "";
+
+      let isStoppageStart = false;
+      let isStoppageEnd = false;
+
+      // Stoppage start: machine transitions to stopped state
+      if (
+        eventType === "stopped" ||
+        eventType === "motor_stopped" ||
+        (statusType === "initial" && currentStatus === "stopped") ||
+        (statusType === "status" && currentStatus === "stopped" && previousStatus !== "stopped" && previousStatus !== "unknown")
+      ) {
+        isStoppageStart = true;
+      }
+
+      // Stoppage end: machine transitions from stopped to running/idle
+      // Skip initial "started" events as they don't end existing stoppages
+      if (
+        (eventType === "started" && statusType !== "initial") ||
+        eventType === "motor_started" ||
+        (statusType === "status" && currentStatus !== "stopped" && previousStatus === "stopped")
+      ) {
+        isStoppageEnd = true;
+      }
+
+      if (isStoppageStart) {
         // Machine stopped - record the start of stoppage
+        // If there's already an ongoing stoppage, close it first (edge case: multiple stop events)
+        const existingStoppage = machineStoppageMap.get(machineKey);
+        if (existingStoppage) {
+          // Close the previous stoppage if a new one starts immediately
+          const durationMs = logTime.getTime() - existingStoppage.startTime.getTime();
+          const durationSec = Math.floor(durationMs / 1000);
+          
+          // Only add if duration is meaningful (more than 0 seconds)
+          if (durationSec > 0) {
+            stoppages.push({
+              machine_key: machineKey,
+              machine_name: existingStoppage.startLog.machine_name || `${existingStoppage.startLog.plc_brand} ${existingStoppage.startLog.plc_model}`,
+              plc_brand: existingStoppage.startLog.plc_brand,
+              plc_model: existingStoppage.startLog.plc_model,
+              stoppage_start: existingStoppage.startLog.timestamp,
+              stoppage_end: log.timestamp,
+              duration_seconds: durationSec,
+              duration_display: formatDuration(durationSec),
+              is_ongoing: false,
+              temperature: existingStoppage.startLog.temperature,
+              pressure: existingStoppage.startLog.pressure,
+              rpm: existingStoppage.startLog.rpm,
+              production_count: existingStoppage.startLog.production_count,
+            });
+          }
+        }
+        
+        // Record the new stoppage start
         machineStoppageMap.set(machineKey, {
           startLog: log,
           startTime: logTime,
         });
-      } else if (log.event_type === "started") {
+      } else if (isStoppageEnd) {
         // Machine started - check if there was an ongoing stoppage
         const ongoingStoppage = machineStoppageMap.get(machineKey);
         if (ongoingStoppage) {
@@ -230,9 +292,13 @@ const StoppageInfo: React.FC = () => {
     });
 
     // Sort by stoppage start time (most recent first)
-    return stoppages.sort(
+    const sortedStoppages = stoppages.sort(
       (a, b) => new Date(b.stoppage_start).getTime() - new Date(a.stoppage_start).getTime()
     );
+    
+    console.log(`Processed ${statusLogs.length} status logs into ${sortedStoppages.length} stoppage events`);
+    
+    return sortedStoppages;
   }, [statusLogs]);
 
   // Filter stoppages by machine
