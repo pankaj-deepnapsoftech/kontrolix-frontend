@@ -555,9 +555,7 @@ const StoppageInfo: React.FC = () => {
                   <Th color={colors.table.headerText}>Machine</Th>
                   <Th color={colors.table.headerText}>Started At</Th>
                   <Th color={colors.table.headerText}>Stopped At</Th>
-
-                  {/* <Th color={colors.table.headerText}>Current Status</Th> */}
-                  {/* <Th color={colors.table.headerText}>Status</Th> */}
+                  <Th color={colors.table.headerText} isNumeric>Duration</Th>
                   <Th color={colors.table.headerText} isNumeric>
                     Temp (°C)
                   </Th>
@@ -618,43 +616,56 @@ const StoppageInfo: React.FC = () => {
                     <Td fontSize="xs">
                       {formatToIST(stoppage.stoppage_start)}
                     </Td>
-                    {/* <Td fontSize="xs">
+                    <Td isNumeric fontSize="sm" fontWeight="medium">
                       {(() => {
                         const machineKey = stoppage.machine_key;
                         const currentStatus = currentMachineStatus[machineKey];
-
-                        if (currentStatus) {
-                          if (currentStatus.status === "running") {
-                            // Show "Started" with timestamp in IST
-                            return currentStatus.timestamp
-                              ? formatToIST(currentStatus.timestamp)
-                              : "-";
-                          } else if (currentStatus.status === "stopped") {
-                            // Show "Stopped At" with stopped_at in IST
-                            return currentStatus.stopped_at
-                              ? formatToIST(currentStatus.stopped_at)
-                              : "-";
+                        
+                        // Get started_at (same as "Started At" column)
+                        let started_at: string | null = null;
+                        if (currentStatus && currentStatus.status === "running") {
+                          started_at = currentStatus.timestamp || null;
+                        } else {
+                          started_at = stoppage.stoppage_end || null;
+                        }
+                        
+                        // Get stopped_at (same as "Stopped At" column)
+                        let stopped_at: string | null = null;
+                        if (currentStatus && currentStatus.status === "stopped" && currentStatus.stopped_at) {
+                          stopped_at = currentStatus.stopped_at;
+                        } else {
+                          stopped_at = stoppage.stoppage_start;
+                        }
+                        
+                        // Calculate duration: stopped_at - started_at
+                        if (started_at && stopped_at) {
+                          const startTime = new Date(started_at).getTime();
+                          const stopTime = new Date(stopped_at).getTime();
+                          // Duration = stopped_at - started_at
+                          const durationMs = stopTime - startTime;
+                          const durationSec = Math.floor(durationMs / 1000);
+                          
+                          if (durationSec > 0) {
+                            return formatDuration(durationSec);
+                          } else if (durationSec < 0) {
+                            // If negative, calculate absolute value
+                            return formatDuration(Math.abs(durationSec));
                           }
                         }
+                        
+                        // For ongoing stoppages, use calculated duration
+                        if (stoppage.is_ongoing && stoppage.duration_display) {
+                          return stoppage.duration_display;
+                        }
+                        
+                        // Use existing duration if available
+                        if (stoppage.duration_display) {
+                          return stoppage.duration_display;
+                        }
+                        
                         return "-";
                       })()}
-                    </Td> */}
-                    {/* <Td>
-                      <p
-                        fontSize="xs"
-                        className="px-2 py-1 rounded inline-block"
-                        style={{
-                          backgroundColor: stoppage.is_ongoing
-                            ? colors.warning[50]
-                            : colors.gray[50],
-                          color: stoppage.is_ongoing
-                            ? colors.warning[700]
-                            : colors.text.secondary,
-                        }}
-                      >
-                        {stoppage.is_ongoing ? "Ongoing" : "Resolved"}
-                      </p>
-                    </Td> */}
+                    </Td>
                     <Td isNumeric fontSize="sm">
                       {stoppage.temperature?.toFixed(1) || "-"}
                     </Td>
