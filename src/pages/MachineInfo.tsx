@@ -275,8 +275,8 @@ const MachineInfo: React.FC = () => {
         const ageSec = (Date.now() - tsTime) / 1000;
         
         let status = running ? "running" : idleBase ? "idle" : "stopped";
-        if (ageSec > 20) status = "stopped";
-        else if (ageSec > 10) status = "idle";
+        if (ageSec > 30) status = "stopped";
+        else if (ageSec > 20) status = "idle";
 
         machineMap.set(machineKey, {
           machineKey,

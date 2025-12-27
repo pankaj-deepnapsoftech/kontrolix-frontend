@@ -77,13 +77,13 @@ const MachineStatus: React.FC = () => {
     // Calculate age of data in seconds
     const ageSec = (Date.now() - timestamp.getTime()) / 1000;
     
-    // If data is older than 20 seconds, status is stopped
-    if (ageSec > 20) {
+    // If data is older than 30 seconds, status is stopped
+    if (ageSec > 30) {
       return "stopped";
     }
     
-    // If data is older than 10 seconds, status is idle
-    if (ageSec > 10) {
+    // If data is older than 20 seconds, status is idle
+    if (ageSec > 20) {
       return "idle";
     }
     
@@ -408,12 +408,32 @@ const MachineStatus: React.FC = () => {
       setIsLive(false);
     });
     s.on("plcDataUpdate", (doc: any) => {
+      console.log("📨 Socket received plcDataUpdate:", doc);
+      if (!doc || !doc.timestamp) {
+        console.warn("⚠️ Invalid data received from socket:", doc);
+        return;
+      }
+      
       setRawPlcRows((prev) => {
-        const updated = [doc, ...prev].slice(0, 5000);
+        // Remove old entries for the same machine (brand + model) to keep only latest
+        const machineKey = `${doc.plc_brand}_${doc.plc_model}`;
+        const filtered = prev.filter((item: any) => {
+          if (!item || !item.plc_brand || !item.plc_model) return true;
+          const itemMachineKey = `${item.plc_brand}_${item.plc_model}`;
+          // Keep items from different machines, or if same machine but different timestamp
+          return itemMachineKey !== machineKey || item.timestamp !== doc.timestamp;
+        });
+        
+        // Add new data at the beginning
+        const updated = [doc, ...filtered].slice(0, 5000);
+        
+        // Transform and update immediately
         const transformed = transformMachineData(updated);
         setMachineData(transformed);
         setApiSummaryData(buildSummary(transformed));
         setLastUpdated(new Date());
+        
+        console.log("✅ Updated machine data. Total machines:", transformed.length);
         return updated;
       });
     });
