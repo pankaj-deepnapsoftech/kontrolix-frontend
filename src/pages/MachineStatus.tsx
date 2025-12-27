@@ -33,6 +33,9 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
+  AreaChart,
+  Area,
+  ComposedChart,
 } from "recharts";
 import { Activity } from "lucide-react";
 import { io } from "socket.io-client";
@@ -65,6 +68,20 @@ const MachineStatus: React.FC = () => {
 
   // Store API summary data for statistics cards
   const [apiSummaryData, setApiSummaryData] = useState<any>(null);
+
+  // Format duration in human-readable format (same as StoppageInfo)
+  const formatDuration = (seconds: number): string => {
+    if (seconds < 60) return `${seconds}s`;
+    if (seconds < 3600) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+    }
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    if (mins === 0) return `${hours}h`;
+    return `${hours}h ${mins}m`;
+  };
 
   // Helper function to calculate machine status based on data age and machine state
   const calculateMachineStatus = (item: any): string => {
@@ -134,6 +151,8 @@ const MachineStatus: React.FC = () => {
           productionActive: item.production_active ?? 0,
           plcRunning: item.plc_running ?? false,
           status: status,
+          stopped_at: item.stopped_at || null,
+          started_at: item.timestamp || null, // started_at is the timestamp when machine was running
         });
       }
     });
@@ -491,6 +510,123 @@ const MachineStatus: React.FC = () => {
     rpm: item.rpm,
     production: item.productionCount,
   }));
+
+  // Chart data for started_at and stopped_at timeline
+  const timelineChartData = React.useMemo(() => {
+    const data = filteredData
+      .filter((item: any) => item.rawTimestamp || item.stopped_at)
+      .map((item: any) => {
+        // started_at is the timestamp when machine was running
+        const startedAt = item.rawTimestamp ? new Date(item.rawTimestamp).getTime() : null;
+        const stoppedAt = item.stopped_at ? new Date(item.stopped_at).getTime() : null;
+        
+        // Format time for display (IST)
+        const formatTime = (timestamp: number | null) => {
+          if (!timestamp) return null;
+          return new Date(timestamp).toLocaleString("en-IN", {
+            timeZone: "Asia/Kolkata",
+            day: "2-digit",
+            month: "short",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true,
+          });
+        };
+
+        // Format time for display (UTC)
+        const formatTimeUTC = (timestamp: number | null) => {
+          if (!timestamp) return null;
+          return new Date(timestamp).toLocaleString("en-US", {
+            timeZone: "UTC",
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true,
+          }) + " UTC";
+        };
+
+        // Calculate relative time (minutes from now) for better visualization
+        const now = Date.now();
+        const startedAtRelative = startedAt ? Math.floor((now - startedAt) / (1000 * 60)) : null; // minutes ago
+        const stoppedAtRelative = stoppedAt ? Math.floor((now - stoppedAt) / (1000 * 60)) : null; // minutes ago
+
+        // Calculate duration: stopped_at - started_at (same logic as StoppageInfo)
+        let started_at: string | null = null;
+        let stopped_at: string | null = null;
+        
+        // Get started_at (when machine was running)
+        if (item.status === "running") {
+          started_at = item.rawTimestamp || null;
+        } else {
+          // For stopped machines, started_at would be when it was last running
+          // We'll use rawTimestamp as started_at
+          started_at = item.rawTimestamp || null;
+        }
+        
+        // Get stopped_at (when machine stopped)
+        if (item.status === "stopped" && item.stopped_at) {
+          stopped_at = item.stopped_at;
+        } else if (item.stopped_at) {
+          stopped_at = item.stopped_at;
+        }
+        
+        // Calculate duration in seconds (same as StoppageInfo)
+        let durationSeconds: number | null = null;
+        let durationDisplay: string = "-";
+        
+        if (started_at && stopped_at) {
+          const startTime = new Date(started_at).getTime();
+          const stopTime = new Date(stopped_at).getTime();
+          // Duration = stopped_at - started_at
+          const durationMs = stopTime - startTime;
+          durationSeconds = Math.floor(durationMs / 1000); // duration in seconds
+          
+          if (durationSeconds > 0) {
+            durationDisplay = formatDuration(durationSeconds);
+          } else if (durationSeconds < 0) {
+            // If negative, calculate absolute value
+            durationDisplay = formatDuration(Math.abs(durationSeconds));
+          }
+        } else if (stopped_at && item.status === "stopped") {
+          // If machine is currently stopped and we have stopped_at, calculate from stopped_at to now
+          const stopTime = new Date(stopped_at).getTime();
+          const durationMs = now - stopTime;
+          durationSeconds = Math.floor(durationMs / 1000);
+          if (durationSeconds > 0) {
+            durationDisplay = formatDuration(durationSeconds);
+          }
+        }
+        
+        // Convert to minutes for chart display
+        const durationMinutes = durationSeconds ? Math.floor(durationSeconds / 60) : null;
+
+        return {
+          machine: item.deviceId,
+          started_at: startedAt,
+          stopped_at: stoppedAt,
+          started_at_display: formatTime(startedAt),
+          stopped_at_display: formatTime(stoppedAt),
+          started_at_utc: formatTimeUTC(startedAt),
+          stopped_at_utc: formatTimeUTC(stoppedAt),
+          started_at_minutes_ago: startedAtRelative,
+          stopped_at_minutes_ago: stoppedAtRelative,
+          duration_seconds: durationSeconds,
+          duration_minutes: durationMinutes,
+          duration_display: durationDisplay,
+          status: item.status,
+        };
+      })
+      .sort((a: any, b: any) => {
+        // Sort by machine name
+        return a.machine.localeCompare(b.machine);
+      });
+
+    return data;
+  }, [filteredData]);
 
   // Get unique values for filters
   const brands =
@@ -949,6 +1085,126 @@ const MachineStatus: React.FC = () => {
             </CardBody>
           </Card>
         </HStack>
+
+        {/* Started At & Stopped At Timeline Chart */}
+        {/* <Card mt={6}>
+          <CardBody>
+            <Heading size="md" mb={4}>
+              Machine Start/Stop Timeline
+            </Heading>
+            <Box height="400px">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={timelineChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                  <XAxis
+                    dataKey="machine"
+                    stroke="#718096"
+                    fontSize={12}
+                    angle={-45}
+                    textAnchor="end"
+                    height={100}
+                  />
+                  <YAxis
+                    yAxisId="left"
+                    stroke="#718096"
+                    fontSize={12}
+                    label={{ value: "Minutes Ago", angle: -90, position: "insideLeft" }}
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    stroke="#805AD5"
+                    fontSize={12}
+                    label={{ value: "Duration (Minutes)", angle: 90, position: "insideRight" }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "white",
+                      border: "1px solid #E2E8F0",
+                      borderRadius: "8px",
+                      padding: "12px",
+                    }}
+                    content={({ active, payload }: any) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <Box p={2} bg="white" borderRadius="md" boxShadow="md">
+                            <Text fontWeight="bold" mb={2} fontSize="sm">
+                              {data.machine}
+                            </Text>
+                            {data.started_at_utc && (
+                              <Box mb={1}>
+                                <Text fontSize="xs" color="gray.600" fontWeight="medium">
+                                  Started At:
+                                </Text>
+                                <Text fontSize="xs" color="green.600">
+                                  {data.started_at_utc}
+                                </Text>
+                              </Box>
+                            )}
+                            {data.stopped_at_utc && (
+                              <Box mb={1}>
+                                <Text fontSize="xs" color="gray.600" fontWeight="medium">
+                                  Stopped At:
+                                </Text>
+                                <Text fontSize="xs" color="red.600">
+                                  {data.stopped_at_utc}
+                                </Text>
+                              </Box>
+                            )}
+                            {data.duration_display && (
+                              <Box>
+                                <Text fontSize="xs" color="gray.600" fontWeight="medium">
+                                  Duration:
+                                </Text>
+                                <Text fontSize="xs" color="purple.600">
+                                  {data.duration_display}
+                                </Text>
+                              </Box>
+                            )}
+                          </Box>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Legend />
+                  <Line
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="started_at_minutes_ago"
+                    stroke="#38A169"
+                    strokeWidth={3}
+                    dot={{ fill: "#38A169", r: 5 }}
+                    activeDot={{ r: 8 }}
+                    name="Started At"
+                  />
+                  <Line
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="stopped_at_minutes_ago"
+                    stroke="#E53E3E"
+                    strokeWidth={3}
+                    dot={{ fill: "#E53E3E", r: 5 }}
+                    activeDot={{ r: 8 }}
+                    name="Stopped At"
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="duration_minutes"
+                    stroke="#805AD5"
+                    strokeWidth={3}
+                    dot={{ fill: "#805AD5", r: 5 }}
+                    activeDot={{ r: 8 }}
+                    name="Duration"
+                    strokeDasharray="5 5"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </Box>
+          </CardBody>
+        </Card> */}
 
         {/* Machine Performance Data Cards */}
         <Card>
