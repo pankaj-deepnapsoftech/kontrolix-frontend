@@ -62,7 +62,6 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
       { Header: "Last Name", accessor: "last_name" },
       { Header: "Email", accessor: "email" },
       { Header: "Phone", accessor: "phone" },
-      { Header: "Address", accessor: "address", Cell: ({ value }) => value || "N/A" },
       { 
         Header: "Assigned Employees", 
         accessor: "assignedEmployees",

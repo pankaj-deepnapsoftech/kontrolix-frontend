@@ -229,31 +229,6 @@ const AddSupervisor: React.FC<AddSupervisorProps> = ({
           <div className="space-y-4">
             <FormControl isRequired>
               <FormLabel fontWeight="bold" color="gray.700">
-                Select Employees
-              </FormLabel>
-              <Select
-                className="mt-2"
-                placeholder="Select employees to convert to supervisor"
-                value={selectedEmployees}
-                options={employeeOptions}
-                styles={customStyles}
-                onChange={(selected: any) => {
-                  setSelectedEmployees(selected || []);
-                }}
-                isMulti
-                isClearable
-                isLoading={isLoadingEmployees}
-                isDisabled={isLoadingEmployees}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                {selectedEmployees.length > 0
-                  ? `${selectedEmployees.length} employee(s) selected`
-                  : "Please select at least one employee"}
-              </p>
-            </FormControl>
-
-            <FormControl isRequired>
-              <FormLabel fontWeight="bold" color="gray.700">
                 First Name
               </FormLabel>
               <Input
@@ -327,24 +302,7 @@ const AddSupervisor: React.FC<AddSupervisorProps> = ({
               />
             </FormControl>
 
-            <FormControl>
-              <FormLabel fontWeight="bold" color="gray.700">
-                Address
-              </FormLabel>
-              <Input
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Enter address (optional)"
-                size="lg"
-                borderColor={colors.border.medium}
-                _hover={{ borderColor: colors.border.dark }}
-                _focus={{
-                  borderColor: colors.primary[500],
-                  boxShadow: `0 0 0 1px ${colors.primary[500]}`,
-                }}
-              />
-            </FormControl>
-
+            
             <FormControl isRequired>
               <FormLabel fontWeight="bold" color="gray.700">
                 Password
@@ -451,6 +409,31 @@ const AddSupervisor: React.FC<AddSupervisorProps> = ({
                   Passwords do not match
                 </p>
               )}
+            </FormControl>
+
+            <FormControl isRequired>
+              <FormLabel fontWeight="bold" color="gray.700">
+                Select Employees
+              </FormLabel>
+              <Select
+                className="mt-2"
+                placeholder="Select employees"
+                value={selectedEmployees}
+                options={employeeOptions}
+                styles={customStyles}
+                onChange={(selected: any) => {
+                  setSelectedEmployees(selected || []);
+                }}
+                isMulti
+                isClearable
+                isLoading={isLoadingEmployees}
+                isDisabled={isLoadingEmployees}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {selectedEmployees.length > 0
+                  ? `${selectedEmployees.length} employee(s) selected`
+                  : ""}
+              </p>
             </FormControl>
 
             <Button
