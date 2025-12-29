@@ -346,15 +346,18 @@ const Employees: React.FC = () => {
 
           {/* Controls */}
           <div className="flex flex-wrap items-center gap-3">
-            <Button
-              leftIcon={<UserPlus size={16} />}
-              onClick={openAddEmployeeDrawerHandler}
-              size="sm"
-              colorScheme="blue"
-              _hover={{ bg: "blue.600" }}
-            >
-              Add New Employee
-            </Button>
+            {/* Only show Add New Employee button for admin/super users, not for supervisors */}
+            {!isSupervisor && (
+              <Button
+                leftIcon={<UserPlus size={16} />}
+                onClick={openAddEmployeeDrawerHandler}
+                size="sm"
+                colorScheme="blue"
+                _hover={{ bg: "blue.600" }}
+              >
+                Add New Employee
+              </Button>
+            )}
             <Button
               leftIcon={<RefreshCw size={16} />}
               onClick={fetchEmployeesHandler}
@@ -448,6 +451,7 @@ const Employees: React.FC = () => {
               isLoadingEmployees={false}
               approveEmployeeHandler={approveEmployeeHandler}
               bulkApproveEmployeesHandler={bulkApproveEmployeesHandler}
+              isSupervisor={isSupervisor}
             />
         </>
       )}

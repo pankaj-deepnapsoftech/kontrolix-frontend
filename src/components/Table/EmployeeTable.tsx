@@ -36,6 +36,7 @@ interface EmployeeTableProps {
   deleteEmployeeHandler?: (id: string) => void;
   approveEmployeeHandler?: (id: string) => void;
   bulkApproveEmployeesHandler?: (ids: string[]) => void;
+  isSupervisor?: boolean; // Hide edit/delete for supervisors
 }
 
 const EmployeeTable: React.FC<EmployeeTableProps> = ({
@@ -46,6 +47,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
   deleteEmployeeHandler,
   approveEmployeeHandler,
   bulkApproveEmployeesHandler,
+  isSupervisor = false,
 }) => {
   const columns = useMemo(
     () => [
@@ -248,7 +250,10 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                           </div>
                         </Th>
                       ))}
-                      <Th color={colors.table.headerText}>Actions</Th>
+                      {/* Show Actions column if there are any actions available */}
+                      {(openEmployeeDetailsDrawerHandler || openUpdateEmployeeDrawerHandler || (!isSupervisor && deleteEmployeeHandler)) && (
+                        <Th color={colors.table.headerText}>Actions</Th>
+                      )}
                     </Tr>
                   ))}
                 </Thead>
@@ -340,8 +345,10 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                             )}
                           </Td>
                         ))}
-                        <Td fontSize="sm">
-                          <div className="flex items-center gap-1">
+                        {/* Show Actions cell if there are any actions available */}
+                        {(openEmployeeDetailsDrawerHandler || openUpdateEmployeeDrawerHandler || (!isSupervisor && deleteEmployeeHandler)) && (
+                          <Td fontSize="sm">
+                            <div className="flex items-center gap-1">
                             {openEmployeeDetailsDrawerHandler && (
                               <button
                                 onClick={() =>
@@ -385,6 +392,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                                 </svg>
                               </button>
                             )}
+                            {/* Edit button - accessible to supervisors */}
                             {openUpdateEmployeeDrawerHandler && (
                               <button
                                 onClick={() =>
@@ -422,7 +430,8 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                                 </svg>
                               </button>
                             )}
-                            {deleteEmployeeHandler && (
+                            {/* Hide Delete button for supervisors */}
+                            {!isSupervisor && deleteEmployeeHandler && (
                               <button
                                 onClick={() =>
                                   deleteEmployeeHandler(row.original._id)
@@ -480,8 +489,9 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                                 <FcApproval className="w-3.5 h-3.5" />
                               </button>
                             )} */}
-                          </div>
-                        </Td>
+                            </div>
+                          </Td>
+                        )}
                       </Tr>
                     );
                   })}
