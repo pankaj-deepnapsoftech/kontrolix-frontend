@@ -50,23 +50,34 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
       }).unwrap();
       // dispatch(userExists(data.user));
 
-      if (data.user.role) {
+      // Check if supervisor login
+      if (data?.user?.isSupervisor) {
+        dispatch(userExists({ ...data.user, role: "supervisor" }));
+        setCookie("access_token", data.token, { maxAge: 1000 * 60 * 60 * 24 });
+        setCookie("role", "supervisor", { maxAge: 1000 * 60 * 60 * 24 });
+        setCookie("name", data.user.first_name, { maxAge: 1000 * 60 * 60 * 24 });
+        setCookie("email", data.user.email, { maxAge: 1000 * 60 * 60 * 24 });
+      } else if (data.user.role) {
         dispatch(userExists(data.user));
-      } else if (data?.user?.isSuper) {
-        dispatch(userExists({ ...data.user, role: "admin" }));
-      } else {
-        dispatch(userExists({ ...data.user, role: "emp" }));
-      }
-      setCookie("access_token", data.token, { maxAge: 1000 * 60 * 60 * 24 });
-      if (data?.user?.isSuper) {
-        setCookie("role", "admin", { maxAge: 1000 * 60 * 60 * 24 });
-      } else {
+        setCookie("access_token", data.token, { maxAge: 1000 * 60 * 60 * 24 });
         setCookie("role", data?.user?.role?.role || "emp", {
           maxAge: 1000 * 60 * 60 * 24,
         });
+        setCookie("name", data.user.first_name, { maxAge: 1000 * 60 * 60 * 24 });
+        setCookie("email", data.user.email, { maxAge: 1000 * 60 * 60 * 24 });
+      } else if (data?.user?.isSuper) {
+        dispatch(userExists({ ...data.user, role: "admin" }));
+        setCookie("access_token", data.token, { maxAge: 1000 * 60 * 60 * 24 });
+        setCookie("role", "admin", { maxAge: 1000 * 60 * 60 * 24 });
+        setCookie("name", data.user.first_name, { maxAge: 1000 * 60 * 60 * 24 });
+        setCookie("email", data.user.email, { maxAge: 1000 * 60 * 60 * 24 });
+      } else {
+        dispatch(userExists({ ...data.user, role: "emp" }));
+        setCookie("access_token", data.token, { maxAge: 1000 * 60 * 60 * 24 });
+        setCookie("role", "emp", { maxAge: 1000 * 60 * 60 * 24 });
+        setCookie("name", data.user.first_name, { maxAge: 1000 * 60 * 60 * 24 });
+        setCookie("email", data.user.email, { maxAge: 1000 * 60 * 60 * 24 });
       }
-      setCookie("name", data.user.first_name, { maxAge: 1000 * 60 * 60 * 24 });
-      setCookie("email", data.user.email, { maxAge: 1000 * 60 * 60 * 24 });
       toast.success(data.message);
       navigate("/");
     } catch (err: any) {

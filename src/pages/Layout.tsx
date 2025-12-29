@@ -29,7 +29,21 @@ const Layout: React.FC = () => {
         throw new Error(data.message);
       }
       setCookie("access_token", data.token, { maxAge: 86400 });
-      dispatch(userExists(data.user));
+      
+      // Handle supervisor login
+      if (data?.user?.isSupervisor) {
+        dispatch(userExists({ ...data.user, role: "supervisor" }));
+        setCookie("role", "supervisor", { maxAge: 86400 });
+      } else if (data.user.role) {
+        dispatch(userExists(data.user));
+        setCookie("role", data?.user?.role?.role || "emp", { maxAge: 86400 });
+      } else if (data?.user?.isSuper) {
+        dispatch(userExists({ ...data.user, role: "admin" }));
+        setCookie("role", "admin", { maxAge: 86400 });
+      } else {
+        dispatch(userExists({ ...data.user, role: "emp" }));
+        setCookie("role", "emp", { maxAge: 86400 });
+      }
     } catch (err: any) {
       navigate("/login");
       toast.error(err?.message || "Something went wrong");
