@@ -61,7 +61,7 @@ const MachineStatus: React.FC = () => {
   const [cookies] = useCookies();
 
   const BACKEND_API_BASE =
-    (process as any)?.env?.REACT_APP_BACKEND_URL || "http://192.168.1.33:9023/api/";
+    (process as any)?.env?.REACT_APP_BACKEND_URL || "http://localhost:9023/api/";
   const machineApiUrl =
     (BACKEND_API_BASE.endsWith("/") ? BACKEND_API_BASE : BACKEND_API_BASE + "/") + "plc/all";
   const socketUrl = BACKEND_API_BASE.replace(/\/api\/?$/, "");
@@ -412,6 +412,7 @@ const MachineStatus: React.FC = () => {
       reconnection: true,
       reconnectionDelay: 500,
       reconnectionAttempts: Infinity,
+      withCredentials: true,
     });
     socketRef.current = s;
     s.on("connect", () => {

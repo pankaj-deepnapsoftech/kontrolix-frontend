@@ -123,7 +123,12 @@ const StoppageInfo: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch status logs");
+        if (response.status === 404) {
+          console.warn("Status logs endpoint not found (404). Backend may need to be updated.");
+          setStatusLogs([]);
+          return;
+        }
+        throw new Error(`Failed to fetch status logs (${response.status})`);
       }
 
       const result = await response.json();
@@ -171,9 +176,15 @@ const StoppageInfo: React.FC = () => {
           });
           setCurrentMachineStatus(statusMap);
         }
+      } else if (response.status === 404) {
+        console.warn("PLC endpoint not found (404). Backend may need to be updated.");
+        // Set empty status map instead of failing
+        setCurrentMachineStatus({});
       }
     } catch (error) {
       console.error("Failed to fetch current machine status:", error);
+      // Set empty status map on error
+      setCurrentMachineStatus({});
     }
   };
 
