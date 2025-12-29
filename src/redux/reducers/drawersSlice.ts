@@ -36,6 +36,11 @@ const initialState = {
   isUpdateEmployeeDrawerOpened: false,
   isEmployeeDetailsDrawerOpened: false,
 
+  // Supervisor Drawer
+  isAddSupervisorDrawerOpened: false,
+  isUpdateSupervisorDrawerOpened: false,
+  isSupervisorDetailsDrawerOpened: false,
+
   // Proforma Invoice Drawer
   isAddProformaInvoiceDrawerOpened: false,
   isUpdateProformaInvoiceDrawerOpened: false,
@@ -215,6 +220,27 @@ const drawersSlice = createSlice({
     closeEmployeeDetailsDrawer: (state)=>{
       state.isEmployeeDetailsDrawerOpened = false;
     },
+    // Add Supervisor Drawer
+    openAddSupervisorDrawer: (state)=>{
+      state.isAddSupervisorDrawerOpened = true;
+    },
+    closeAddSupervisorDrawer: (state)=>{
+      state.isAddSupervisorDrawerOpened = false;
+    },
+    // Update Supervisor Drawer
+    openUpdateSupervisorDrawer: (state)=>{
+      state.isUpdateSupervisorDrawerOpened = true;
+    },
+    closeUpdateSupervisorDrawer: (state)=>{
+      state.isUpdateSupervisorDrawerOpened = false;
+    },
+    // Supervisor Details Drawer
+    openSupervisorDetailsDrawer: (state)=>{
+      state.isSupervisorDetailsDrawerOpened = true;
+    },
+    closeSupervisorDetailsDrawer: (state)=>{
+      state.isSupervisorDetailsDrawerOpened = false;
+    },
     // Add Proforma Invoice Drawer
     openAddProformaInvoiceDrawer: (state)=>{
       state.isAddProformaInvoiceDrawerOpened = true;
@@ -360,6 +386,12 @@ export const {
   closeEmployeeDetailsDrawer,
   openUpdateEmployeeDrawer,
   closeUpdateEmployeeDrawer,
+  openAddSupervisorDrawer,
+  closeAddSupervisorDrawer,
+  openSupervisorDetailsDrawer,
+  closeSupervisorDetailsDrawer,
+  openUpdateSupervisorDrawer,
+  closeUpdateSupervisorDrawer,
   openAddProformaInvoiceDrawer,
   closeAddProformaInvoiceDrawer,
   openUpdateProformaInvoiceDrawer,

@@ -29,7 +29,7 @@ import MachineInfo from "../pages/MachineInfo";
 import { MdOutlineSpeed } from "react-icons/md";
 import StoppageInfo from "../pages/StoppageInfo";
 import { IoIosPeople } from "react-icons/io";
-import Supervisor from "../pages/Supervisor";
+import Supervisors from "../pages/Supervisors";
 const routes = [
   {
     name: "Live Data",
@@ -49,7 +49,7 @@ const routes = [
     name: "Supervisor",
     icon: <IoIosPeople />,
     path: "supervisor",
-    element: <Supervisor />,
+    element: <Supervisors />,
     isSublink: false,
   },
   {
