@@ -2,11 +2,12 @@
 
 import { Button, FormControl, FormLabel, Input } from "@chakra-ui/react";
 import { BiX } from "react-icons/bi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useCookies } from "react-cookie";
 import { colors } from "../../../theme/colors";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
+import Select from "react-select";
 
 interface AddSupervisorProps {
   fetchSupervisorsHandler: () => void;
@@ -28,6 +29,76 @@ const AddSupervisor: React.FC<AddSupervisorProps> = ({
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [address, setAddress] = useState<string>("");
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [employeeOptions, setEmployeeOptions] = useState<{ value: string; label: string }[]>([]);
+  const [selectedEmployees, setSelectedEmployees] = useState<{ value: string; label: string }[]>([]);
+  const [isLoadingEmployees, setIsLoadingEmployees] = useState<boolean>(false);
+
+  const customStyles = {
+    control: (provided: any) => ({
+      ...provided,
+      backgroundColor: "white",
+      borderColor: colors.border.medium,
+      color: colors.text.primary,
+      minHeight: "40px",
+      "&:hover": {
+        borderColor: colors.border.dark,
+      },
+    }),
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isFocused ? colors.gray[100] : "white",
+      color: colors.text.primary,
+      "&:hover": {
+        backgroundColor: colors.gray[200],
+      },
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      zIndex: 9999,
+      backgroundColor: "white",
+      border: `1px solid ${colors.border.medium}`,
+    }),
+    placeholder: (provided: any) => ({
+      ...provided,
+      color: colors.text.secondary,
+    }),
+  };
+
+  // Fetch employees on mount (exclude already assigned employees)
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        setIsLoadingEmployees(true);
+        // For AddSupervisor, don't pass supervisorId - will exclude all assigned employees
+        const response = await fetch(
+          process.env.REACT_APP_BACKEND_URL + "auth/all",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${cookies?.access_token}`,
+            },
+          }
+        );
+        const result = await response.json();
+        if (result.success && Array.isArray(result.users)) {
+          setEmployees(result.users);
+          const options = result.users.map((emp: any) => ({
+            value: emp._id,
+            label: `${emp.first_name || ""} ${emp.last_name || ""}${emp.email ? ` (${emp.email})` : ""}`.trim(),
+          }));
+          setEmployeeOptions(options);
+        }
+      } catch (error: any) {
+        console.error("Error fetching employees:", error);
+      } finally {
+        setIsLoadingEmployees(false);
+      }
+    };
+
+    fetchEmployees();
+  }, [cookies]);
+
 
   const validatePassword = (value: string) => {
     const minLength = 8;
@@ -63,6 +134,11 @@ const AddSupervisor: React.FC<AddSupervisorProps> = ({
       return;
     }
 
+    if (!selectedEmployees || selectedEmployees.length === 0) {
+      toast.error("Please select at least one employee");
+      return;
+    }
+
     try {
       setIsCreatingSupervisor(true);
       const response = await fetch(
@@ -80,6 +156,7 @@ const AddSupervisor: React.FC<AddSupervisorProps> = ({
             password,
             phone,
             address: address || "",
+            assignedEmployees: selectedEmployees.map((emp: any) => emp.value),
           }),
         }
       );
@@ -103,6 +180,7 @@ const AddSupervisor: React.FC<AddSupervisorProps> = ({
       setConfirmPassword("");
       setPasswordError(null);
       setAddress("");
+      setSelectedEmployees([]);
     } catch (error: any) {
       toast.error(error?.message || "Something went wrong");
     } finally {
@@ -149,6 +227,31 @@ const AddSupervisor: React.FC<AddSupervisorProps> = ({
       <div className="mt-8 px-5">
         <form onSubmit={createSupervisorHandler}>
           <div className="space-y-4">
+            <FormControl isRequired>
+              <FormLabel fontWeight="bold" color="gray.700">
+                Select Employees
+              </FormLabel>
+              <Select
+                className="mt-2"
+                placeholder="Select employees to convert to supervisor"
+                value={selectedEmployees}
+                options={employeeOptions}
+                styles={customStyles}
+                onChange={(selected: any) => {
+                  setSelectedEmployees(selected || []);
+                }}
+                isMulti
+                isClearable
+                isLoading={isLoadingEmployees}
+                isDisabled={isLoadingEmployees}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {selectedEmployees.length > 0
+                  ? `${selectedEmployees.length} employee(s) selected`
+                  : "Please select at least one employee"}
+              </p>
+            </FormControl>
+
             <FormControl isRequired>
               <FormLabel fontWeight="bold" color="gray.700">
                 First Name

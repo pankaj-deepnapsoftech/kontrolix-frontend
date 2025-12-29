@@ -26,6 +26,14 @@ interface SupervisorTableProps {
     email: string;
     phone: string;
     address?: string;
+    assignedEmployees?: Array<{
+      _id: string;
+      first_name: string;
+      last_name: string;
+      email: string;
+      phone: string;
+      employeeId?: string;
+    }>;
     isVerified: boolean;
     createdAt: string;
     updatedAt: string;
@@ -55,6 +63,21 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
       { Header: "Email", accessor: "email" },
       { Header: "Phone", accessor: "phone" },
       { Header: "Address", accessor: "address", Cell: ({ value }) => value || "N/A" },
+      { 
+        Header: "Assigned Employees", 
+        accessor: "assignedEmployees",
+        Cell: ({ value }: { value: any }) => {
+          if (!value || !Array.isArray(value) || value.length === 0) {
+            return "N/A";
+          }
+          return value.map((emp: any, index: number) => (
+            <span key={emp._id || index}>
+              {emp.first_name || ""} {emp.last_name || ""}
+              {index < value.length - 1 ? ", " : ""}
+            </span>
+          ));
+        }
+      },
       { 
         Header: "Status", 
         accessor: "isVerified",

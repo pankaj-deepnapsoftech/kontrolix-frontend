@@ -9,9 +9,15 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   closeAddSupervisorDrawer,
   openAddSupervisorDrawer,
+  closeUpdateSupervisorDrawer,
+  openUpdateSupervisorDrawer,
+  closeSupervisorDetailsDrawer,
+  openSupervisorDetailsDrawer,
 } from "../redux/reducers/drawersSlice";
 import SupervisorTable from "../components/Table/SupervisorTable";
 import AddSupervisor from "../components/Drawers/Supervisor/AddSupervisor";
+import UpdateSupervisor from "../components/Drawers/Supervisor/UpdateSupervisor";
+import SupervisorDetails from "../components/Drawers/Supervisor/SupervisorDetails";
 import { colors } from "../theme/colors";
 import {
   Users,
@@ -27,8 +33,9 @@ const Supervisors: React.FC = () => {
   const [data, setData] = useState([]);
   const [searchKey, setSearchKey] = useState<string | undefined>();
   const [filteredData, setFilteredData] = useState<any>([]);
+  const [supervisorId, setSupervisorId] = useState<string | undefined>();
 
-  const { isAddSupervisorDrawerOpened } =
+  const { isAddSupervisorDrawerOpened, isUpdateSupervisorDrawerOpened, isSupervisorDetailsDrawerOpened } =
     useSelector((state: any) => state.drawers);
   const dispatch = useDispatch();
 
@@ -38,6 +45,50 @@ const Supervisors: React.FC = () => {
 
   const closeAddSupervisorDrawerHandler = () => {
     dispatch(closeAddSupervisorDrawer());
+  };
+
+  const openUpdateSupervisorDrawerHandler = (id: string) => {
+    setSupervisorId(id);
+    dispatch(openUpdateSupervisorDrawer());
+  };
+
+  const closeUpdateSupervisorDrawerHandler = () => {
+    dispatch(closeUpdateSupervisorDrawer());
+  };
+
+  const openSupervisorDetailsDrawerHandler = (id: string) => {
+    setSupervisorId(id);
+    dispatch(openSupervisorDetailsDrawer());
+  };
+
+  const closeSupervisorDetailsDrawerHandler = () => {
+    dispatch(closeSupervisorDetailsDrawer());
+  };
+
+  const deleteSupervisorHandler = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this supervisor?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        process.env.REACT_APP_BACKEND_URL + `supervisor/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+        }
+      );
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Failed to delete supervisor");
+      }
+      toast.success(result.message || "Supervisor deleted successfully");
+      fetchSupervisorsHandler();
+    } catch (error: any) {
+      toast.error(error?.message || "Something went wrong");
+    }
   };
 
   const [isLoadingSupervisors, setIsLoadingSupervisors] = useState<boolean>(false);
@@ -146,6 +197,23 @@ const Supervisors: React.FC = () => {
         />
       )}
 
+      {/* Update Supervisor Drawer */}
+      {isUpdateSupervisorDrawerOpened && (
+        <UpdateSupervisor
+          closeDrawerHandler={closeUpdateSupervisorDrawerHandler}
+          fetchSupervisorsHandler={fetchSupervisorsHandler}
+          supervisorId={supervisorId}
+        />
+      )}
+
+      {/* Supervisor Details Drawer */}
+      {isSupervisorDetailsDrawerOpened && (
+        <SupervisorDetails
+          closeDrawerHandler={closeSupervisorDetailsDrawerHandler}
+          supervisorId={supervisorId}
+        />
+      )}
+
       {/* Header Section */}
       <div
         className="rounded-xl shadow-sm border p-6 mb-6"
@@ -241,6 +309,9 @@ const Supervisors: React.FC = () => {
       <SupervisorTable
         supervisors={filteredData}
         isLoadingSupervisors={isLoadingSupervisors}
+        openUpdateSupervisorDrawerHandler={openUpdateSupervisorDrawerHandler}
+        openSupervisorDetailsDrawerHandler={openSupervisorDetailsDrawerHandler}
+        deleteSupervisorHandler={deleteSupervisorHandler}
       />
     </div>
   );
