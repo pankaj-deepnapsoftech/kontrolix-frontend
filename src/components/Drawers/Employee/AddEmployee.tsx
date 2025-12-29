@@ -157,7 +157,10 @@ const AddEmployee: React.FC<AddEmployeeProps> = ({
                 size="lg"
                 borderColor={colors.border.medium}
                 _hover={{ borderColor: colors.border.dark }}
-                _focus={{ borderColor: colors.primary[500], boxShadow: `0 0 0 1px ${colors.primary[500]}` }}
+                _focus={{
+                  borderColor: colors.primary[500],
+                  boxShadow: `0 0 0 1px ${colors.primary[500]}`,
+                }}
               />
             </FormControl>
 
@@ -172,7 +175,10 @@ const AddEmployee: React.FC<AddEmployeeProps> = ({
                 size="lg"
                 borderColor={colors.border.medium}
                 _hover={{ borderColor: colors.border.dark }}
-                _focus={{ borderColor: colors.primary[500], boxShadow: `0 0 0 1px ${colors.primary[500]}` }}
+                _focus={{
+                  borderColor: colors.primary[500],
+                  boxShadow: `0 0 0 1px ${colors.primary[500]}`,
+                }}
               />
             </FormControl>
 
@@ -188,7 +194,10 @@ const AddEmployee: React.FC<AddEmployeeProps> = ({
                 size="lg"
                 borderColor={colors.border.medium}
                 _hover={{ borderColor: colors.border.dark }}
-                _focus={{ borderColor: colors.primary[500], boxShadow: `0 0 0 1px ${colors.primary[500]}` }}
+                _focus={{
+                  borderColor: colors.primary[500],
+                  boxShadow: `0 0 0 1px ${colors.primary[500]}`,
+                }}
               />
             </FormControl>
 
@@ -205,7 +214,10 @@ const AddEmployee: React.FC<AddEmployeeProps> = ({
                 maxLength={10}
                 borderColor={colors.border.medium}
                 _hover={{ borderColor: colors.border.dark }}
-                _focus={{ borderColor: colors.primary[500], boxShadow: `0 0 0 1px ${colors.primary[500]}` }}
+                _focus={{
+                  borderColor: colors.primary[500],
+                  boxShadow: `0 0 0 1px ${colors.primary[500]}`,
+                }}
               />
             </FormControl>
 
@@ -226,20 +238,30 @@ const AddEmployee: React.FC<AddEmployeeProps> = ({
                   placeholder="Enter password"
                   size="lg"
                   borderColor={passwordError ? "red.500" : colors.border.medium}
-                  _hover={{ borderColor: passwordError ? "red.500" : colors.border.dark }}
-                  _focus={{ 
-                    borderColor: passwordError ? "red.500" : colors.primary[500], 
-                    boxShadow: passwordError ? "0 0 0 1px red.500" : `0 0 0 1px ${colors.primary[500]}`
+                  _hover={{
+                    borderColor: passwordError ? "red.500" : colors.border.dark,
+                  }}
+                  _focus={{
+                    borderColor: passwordError
+                      ? "red.500"
+                      : colors.primary[500],
+                    boxShadow: passwordError
+                      ? "0 0 0 1px red.500"
+                      : `0 0 0 1px ${colors.primary[500]}`,
                   }}
                   pr="45px"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 z-20"
                   style={{ color: colors.text.secondary }}
                 >
-                  {showPassword ? <IoEyeOutline size={18} /> : <IoEyeOffOutline size={18} />}
+                  {showPassword ? (
+                    <IoEyeOutline size={18} />
+                  ) : (
+                    <IoEyeOffOutline size={18} />
+                  )}
                 </button>
               </div>
               {passwordError && (
@@ -247,7 +269,8 @@ const AddEmployee: React.FC<AddEmployeeProps> = ({
               )}
               {password && !passwordError && (
                 <p className="text-xs text-gray-500 mt-1">
-                  Password must be at least 8 characters with uppercase, lowercase, number, and special character
+                  Password must be at least 8 characters with uppercase,
+                  lowercase, number, and special character
                 </p>
               )}
             </FormControl>
@@ -263,25 +286,46 @@ const AddEmployee: React.FC<AddEmployeeProps> = ({
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm password"
                   size="lg"
-                  borderColor={confirmPassword && password !== confirmPassword ? "red.500" : colors.border.medium}
-                  _hover={{ borderColor: confirmPassword && password !== confirmPassword ? "red.500" : colors.border.dark }}
-                  _focus={{ 
-                    borderColor: confirmPassword && password !== confirmPassword ? "red.500" : colors.primary[500], 
-                    boxShadow: confirmPassword && password !== confirmPassword ? "0 0 0 1px red.500" : `0 0 0 1px ${colors.primary[500]}`
+                  borderColor={
+                    confirmPassword && password !== confirmPassword
+                      ? "red.500"
+                      : colors.border.medium
+                  }
+                  _hover={{
+                    borderColor:
+                      confirmPassword && password !== confirmPassword
+                        ? "red.500"
+                        : colors.border.dark,
+                  }}
+                  _focus={{
+                    borderColor:
+                      confirmPassword && password !== confirmPassword
+                        ? "red.500"
+                        : colors.primary[500],
+                    boxShadow:
+                      confirmPassword && password !== confirmPassword
+                        ? "0 0 0 1px red.500"
+                        : `0 0 0 1px ${colors.primary[500]}`,
                   }}
                   pr="45px"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 z-20"
                   style={{ color: colors.text.secondary }}
                 >
-                  {showPassword ? <IoEyeOutline size={18} /> : <IoEyeOffOutline size={18} />}
+                  {showPassword ? (
+                    <IoEyeOutline size={18} />
+                  ) : (
+                    <IoEyeOffOutline size={18} />
+                  )}
                 </button>
               </div>
               {confirmPassword && password !== confirmPassword && (
-                <p className="text-sm text-red-500 mt-1">Passwords do not match</p>
+                <p className="text-sm text-red-500 mt-1">
+                  Passwords does not match
+                </p>
               )}
             </FormControl>
 
@@ -291,7 +335,10 @@ const AddEmployee: React.FC<AddEmployeeProps> = ({
               className="mt-1 w-full"
               colorScheme="blue"
               size="lg"
-              isDisabled={passwordError !== null || (confirmPassword && password !== confirmPassword)}
+              isDisabled={
+                passwordError !== null ||
+                (confirmPassword && password !== confirmPassword)
+              }
               _hover={{ bg: "blue.600" }}
             >
               Create Employee
