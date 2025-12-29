@@ -65,14 +65,14 @@ const AddSupervisor: React.FC<AddSupervisorProps> = ({
     }),
   };
 
-  // Fetch employees on mount (exclude already assigned employees)
+  // Fetch unassigned employees on mount (for supervisor assignment dropdown only)
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
         setIsLoadingEmployees(true);
-        // For AddSupervisor, don't pass supervisorId - will exclude all assigned employees
+        // Use new unassigned endpoint - excludes already assigned employees
         const response = await fetch(
-          process.env.REACT_APP_BACKEND_URL + "auth/all",
+          process.env.REACT_APP_BACKEND_URL + "auth/unassigned",
           {
             method: "GET",
             headers: {

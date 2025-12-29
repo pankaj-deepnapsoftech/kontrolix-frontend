@@ -69,11 +69,11 @@ const UpdateSupervisor: React.FC<UpdateSupervisorProps> = ({
     const fetchEmployees = async () => {
       try {
         setIsLoadingEmployees(true);
-        // Pass supervisorId as query param to exclude employees assigned to other supervisors
+        // Use unassigned endpoint with supervisorId to exclude employees assigned to other supervisors
         // but include employees already assigned to this supervisor
         const url = supervisorId 
-          ? `${process.env.REACT_APP_BACKEND_URL}auth/all?supervisorId=${supervisorId}`
-          : `${process.env.REACT_APP_BACKEND_URL}auth/all`;
+          ? `${process.env.REACT_APP_BACKEND_URL}auth/unassigned?supervisorId=${supervisorId}`
+          : `${process.env.REACT_APP_BACKEND_URL}auth/unassigned`;
         const response = await fetch(
           url,
           {
