@@ -242,6 +242,99 @@ const UpdateSupervisor: React.FC<UpdateSupervisorProps> = ({
             <div className="space-y-4">
               <FormControl isRequired>
                 <FormLabel fontWeight="bold" color="gray.700">
+                  First Name
+                </FormLabel>
+                <Input
+                  value={firstname}
+                  onChange={(e) => setFirstname(e.target.value)}
+                  placeholder="Enter first name"
+                  size="lg"
+                  borderColor={colors.border.medium}
+                  _hover={{ borderColor: colors.border.dark }}
+                  _focus={{
+                    borderColor: colors.primary[500],
+                    boxShadow: `0 0 0 1px ${colors.primary[500]}`,
+                  }}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel fontWeight="bold" color="gray.700">
+                  Last Name
+                </FormLabel>
+                <Input
+                  value={lastname}
+                  onChange={(e) => setLastname(e.target.value)}
+                  placeholder="Enter last name"
+                  size="lg"
+                  borderColor={colors.border.medium}
+                  _hover={{ borderColor: colors.border.dark }}
+                  _focus={{
+                    borderColor: colors.primary[500],
+                    boxShadow: `0 0 0 1px ${colors.primary[500]}`,
+                  }}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel fontWeight="bold" color="gray.700">
+                  Email
+                </FormLabel>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter email address"
+                  size="lg"
+                  borderColor={colors.border.medium}
+                  _hover={{ borderColor: colors.border.dark }}
+                  _focus={{
+                    borderColor: colors.primary[500],
+                    boxShadow: `0 0 0 1px ${colors.primary[500]}`,
+                  }}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel fontWeight="bold" color="gray.700">
+                  Phone Number
+                </FormLabel>
+                <Input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Enter phone number"
+                  size="lg"
+                  maxLength={10}
+                  borderColor={colors.border.medium}
+                  _hover={{ borderColor: colors.border.dark }}
+                  _focus={{
+                    borderColor: colors.primary[500],
+                    boxShadow: `0 0 0 1px ${colors.primary[500]}`,
+                  }}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel fontWeight="bold" color="gray.700">
+                  Address
+                </FormLabel>
+                <Input
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Enter address (optional)"
+                  size="lg"
+                  borderColor={colors.border.medium}
+                  _hover={{ borderColor: colors.border.dark }}
+                  _focus={{
+                    borderColor: colors.primary[500],
+                    boxShadow: `0 0 0 1px ${colors.primary[500]}`,
+                  }}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel fontWeight="bold" color="gray.700">
                   Select Employees
                 </FormLabel>
                 <Select
@@ -261,86 +354,8 @@ const UpdateSupervisor: React.FC<UpdateSupervisorProps> = ({
                 <p className="text-xs text-gray-500 mt-1">
                   {selectedEmployees.length > 0
                     ? `${selectedEmployees.length} employee(s) selected`
-                    : "Please select at least one employee"}
+                    : ""}
                 </p>
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel fontWeight="bold" color="gray.700">
-                  First Name
-                </FormLabel>
-                <Input
-                  value={firstname}
-                  onChange={(e) => setFirstname(e.target.value)}
-                  placeholder="Enter first name"
-                  size="lg"
-                  borderColor={colors.border.medium}
-                  _hover={{ borderColor: colors.border.dark }}
-                  _focus={{ borderColor: colors.primary[500], boxShadow: `0 0 0 1px ${colors.primary[500]}` }}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontWeight="bold" color="gray.700">
-                  Last Name
-                </FormLabel>
-                <Input
-                  value={lastname}
-                  onChange={(e) => setLastname(e.target.value)}
-                  placeholder="Enter last name"
-                  size="lg"
-                  borderColor={colors.border.medium}
-                  _hover={{ borderColor: colors.border.dark }}
-                  _focus={{ borderColor: colors.primary[500], boxShadow: `0 0 0 1px ${colors.primary[500]}` }}
-                />
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel fontWeight="bold" color="gray.700">
-                  Email
-                </FormLabel>
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter email address"
-                  size="lg"
-                  borderColor={colors.border.medium}
-                  _hover={{ borderColor: colors.border.dark }}
-                  _focus={{ borderColor: colors.primary[500], boxShadow: `0 0 0 1px ${colors.primary[500]}` }}
-                />
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel fontWeight="bold" color="gray.700">
-                  Phone Number
-                </FormLabel>
-                <Input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Enter phone number"
-                  size="lg"
-                  maxLength={10}
-                  borderColor={colors.border.medium}
-                  _hover={{ borderColor: colors.border.dark }}
-                  _focus={{ borderColor: colors.primary[500], boxShadow: `0 0 0 1px ${colors.primary[500]}` }}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontWeight="bold" color="gray.700">
-                  Address
-                </FormLabel>
-                <Input
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Enter address (optional)"
-                  size="lg"
-                  borderColor={colors.border.medium}
-                  _hover={{ borderColor: colors.border.dark }}
-                  _focus={{ borderColor: colors.primary[500], boxShadow: `0 0 0 1px ${colors.primary[500]}` }}
-                />
               </FormControl>
 
               <Button
