@@ -18,6 +18,7 @@ import {
 import EmployeeTable from "../components/Table/EmployeeTable";
 import EmployeeDetails from "../components/Drawers/Employee/EmployeeDetails";
 import UpdateEmployee from "../components/Drawers/Employee/UpdateEmployee";
+import AddEmployee from "../components/Drawers/Employee/AddEmployee";
 import { colors } from "../theme/colors";
 import {
   Users,
@@ -28,6 +29,7 @@ import {
   TrendingUp,
   Calendar,
   AlertTriangle,
+  UserPlus,
 } from "lucide-react";
 
 interface StatCardProps {
@@ -83,9 +85,17 @@ const Employees: React.FC = () => {
   const [searchKey, setSearchKey] = useState<string | undefined>();
   const [filteredData, setFilteredData] = useState<any>([]);
 
-  const { isUpdateEmployeeDrawerOpened, isEmployeeDetailsDrawerOpened } =
+  const { isAddEmployeeDrawerOpened, isUpdateEmployeeDrawerOpened, isEmployeeDetailsDrawerOpened } =
     useSelector((state: any) => state.drawers);
   const dispatch = useDispatch();
+
+  const openAddEmployeeDrawerHandler = () => {
+    dispatch(openAddEmployeeDrawer());
+  };
+
+  const closeAddEmployeeDrawerHandler = () => {
+    dispatch(closeAddEmployeeDrawer());
+  };
 
   const openUpdateEmployeeDrawerHandler = (id: string) => {
     setEmployeeId(id);
@@ -282,6 +292,13 @@ const Employees: React.FC = () => {
       className="min-h-screen p-4 lg:p-6"
       style={{ backgroundColor: colors.background.page }}
     >
+      {/* Add Employee Drawer */}
+      {isAddEmployeeDrawerOpened && (
+        <AddEmployee
+          closeDrawerHandler={closeAddEmployeeDrawerHandler}
+          fetchEmployeesHandler={fetchEmployeesHandler}
+        />
+      )}
       {/* Update Employee Drawer */}
       {isUpdateEmployeeDrawerOpened && (
         <UpdateEmployee
@@ -329,6 +346,15 @@ const Employees: React.FC = () => {
 
           {/* Controls */}
           <div className="flex flex-wrap items-center gap-3">
+            <Button
+              leftIcon={<UserPlus size={16} />}
+              onClick={openAddEmployeeDrawerHandler}
+              size="sm"
+              colorScheme="blue"
+              _hover={{ bg: "blue.600" }}
+            >
+              Add New Employee
+            </Button>
             <Button
               leftIcon={<RefreshCw size={16} />}
               onClick={fetchEmployeesHandler}
