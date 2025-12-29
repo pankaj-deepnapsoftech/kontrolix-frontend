@@ -77,8 +77,8 @@ const StatCard: React.FC<StatCardProps> = ({
 );
 
 const Employees: React.FC = () => {
-  const { isSuper, allowedroutes } = useSelector((state: any) => state.auth);
-  const isAllowed = isSuper || allowedroutes.includes("employee");
+  const { isSuper, allowedroutes, isSupervisor } = useSelector((state: any) => state.auth);
+  const isAllowed = isSuper || isSupervisor || allowedroutes.includes("employee");
   const [cookies] = useCookies();
   const [data, setData] = useState([]);
   const [employeeId, setEmployeeId] = useState<string | undefined>();

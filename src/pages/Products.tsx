@@ -34,8 +34,8 @@ import ProductDetails from "../components/Drawers/Product/ProductDetails";
 import * as XLSX from "xlsx";
 
 const Products: React.FC = () => {
-  const { isSuper, allowedroutes } = useSelector((state: any) => state.auth);
-  const isAllowed = isSuper || allowedroutes.includes("inventory");
+  const { isSuper, allowedroutes, isSupervisor } = useSelector((state: any) => state.auth);
+  const isAllowed = isSuper || isSupervisor || allowedroutes.includes("inventory") || allowedroutes.includes("product");
   const [cookies] = useCookies();
   const [data, setData] = useState([]);
   const [productId, setProductId] = useState<string | undefined>(); // Product Id to be updated or deleted

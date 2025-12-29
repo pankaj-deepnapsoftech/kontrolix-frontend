@@ -27,8 +27,9 @@ import {
 } from "lucide-react";
 
 const Supervisors: React.FC = () => {
-  const { isSuper, allowedroutes } = useSelector((state: any) => state.auth);
-  const isAllowed = isSuper || allowedroutes.includes("supervisor");
+  const { isSuper, allowedroutes, isSupervisor } = useSelector((state: any) => state.auth);
+  // Supervisors should not have access to supervisor module
+  const isAllowed = (isSuper || allowedroutes.includes("supervisor")) && !isSupervisor;
   const [cookies] = useCookies();
   const [data, setData] = useState([]);
   const [searchKey, setSearchKey] = useState<string | undefined>();

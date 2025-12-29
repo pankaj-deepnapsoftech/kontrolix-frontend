@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 const Navigation: React.FC = () => {
   const navigate = useNavigate();
   const [cookie, _, removeCookie] = useCookies();
-  const { allowedroutes, isSuper } = useSelector((state: any) => state.auth);
+  const { allowedroutes, isSuper, isSupervisor } = useSelector((state: any) => state.auth);
   const [checkMenu, setCheckMenu] = useState(false);
   const [showIcon, setShowIcon] = useState(false);
   const [openSubMenus, setOpenSubMenus] = useState<{ [key: string]: boolean }>(
@@ -96,9 +96,15 @@ const Navigation: React.FC = () => {
         <div className="px-4 py-6">
           <ul className="space-y-2 whitespace-nowrap">
             {routes.map((route, ind) => {
+              // Hide supervisor module for supervisors
+              if (route.path === "supervisor" && isSupervisor) {
+                return null;
+              }
+              
               const isAllowed =
                 route.name === "Dashboard" ||
                 isSuper ||
+                (isSupervisor && route.path !== "supervisor") ||
                 allowedroutes.includes(route.path.replaceAll("/", ""));
 
               if (route.isSublink) {

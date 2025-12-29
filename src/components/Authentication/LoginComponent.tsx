@@ -52,7 +52,7 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
 
       // Check if supervisor login
       if (data?.user?.isSupervisor) {
-        dispatch(userExists({ ...data.user, role: "supervisor" }));
+        dispatch(userExists({ ...data.user, isSupervisor: true }));
         setCookie("access_token", data.token, { maxAge: 1000 * 60 * 60 * 24 });
         setCookie("role", "supervisor", { maxAge: 1000 * 60 * 60 * 24 });
         setCookie("name", data.user.first_name, { maxAge: 1000 * 60 * 60 * 24 });

@@ -13,7 +13,7 @@ import { useSelector } from "react-redux";
 import NotFound from "./pages/NotFound";
 
 const App: React.FC = () => {
-  const { allowedroutes, isSuper } = useSelector((state: any) => state.auth);
+  const { allowedroutes, isSuper, isSupervisor } = useSelector((state: any) => state.auth);
 
   return (
     <div className="relative min-h-[99vh] bg-gray-50">
@@ -25,8 +25,14 @@ const App: React.FC = () => {
             {/* <Route path="/register" element={<Register />} /> */}
             <Route path="/" element={<Layout />}>
               {routes.map((route, ind) => {
+                // Block supervisor route for supervisors
+                if (route.path === "supervisor" && isSupervisor) {
+                  return null;
+                }
+                
                 const isAllowed =
                   isSuper ||
+                  (isSupervisor && route.path !== "supervisor") ||
                   allowedroutes.includes(route.path.replaceAll("/", ""));
                 if (route.isSublink) {
                   return (

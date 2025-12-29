@@ -32,7 +32,7 @@ const Layout: React.FC = () => {
       
       // Handle supervisor login
       if (data?.user?.isSupervisor) {
-        dispatch(userExists({ ...data.user, role: "supervisor" }));
+        dispatch(userExists({ ...data.user, isSupervisor: true }));
         setCookie("role", "supervisor", { maxAge: 86400 });
       } else if (data.user.role) {
         dispatch(userExists(data.user));

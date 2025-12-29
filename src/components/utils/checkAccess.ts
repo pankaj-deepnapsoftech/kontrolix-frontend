@@ -9,7 +9,13 @@ const checkAccess = ({auth, route}: checkAccessProps)=>{
     }
 
     const isSuperAdmin = auth.isSuper;
+    const isSupervisor = auth.isSupervisor;
     const permittedRoutes = auth.allowedroutes || [];
+
+    // Supervisors can access all routes except supervisor
+    if(isSupervisor && route !== 'supervisor'){
+        return true;
+    }
 
     if(isSuperAdmin || permittedRoutes.includes(route)){
         return true;

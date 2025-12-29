@@ -6,8 +6,9 @@ const initialState = {
     lastname: undefined,
     email: undefined,
     phone: undefined,
-    allowedroutes: [],
+    allowedroutes: [] as string[],
     isSuper: false,
+    isSupervisor: false,
     isVerified:false,
 }
 
@@ -21,8 +22,14 @@ const authSlice = createSlice({
             state.lastname = action.payload.last_name;
             state.email = action.payload.email;
             state.phone = action.payload.phone;
-            state.allowedroutes = action.payload?.role?.permissions || [];
+            // If supervisor, give access to all modules except supervisor
+            if (action.payload.isSupervisor) {
+                state.allowedroutes = ["", "employee", "machine-history", "resources", "product", "machine-info", "stoppage-info", "userprofile"];
+            } else {
+                state.allowedroutes = action.payload?.role?.permissions || [];
+            }
             state.isSuper = action.payload.isSuper;
+            state.isSupervisor = action.payload.isSupervisor || false;
             state.isVerified = action.payload.isVerified
         },
         userNotExists: (state)=>{
@@ -33,6 +40,7 @@ const authSlice = createSlice({
             state.phone = undefined;
             state.allowedroutes = [];
             state.isSuper = false;
+            state.isSupervisor = false;
             state.isVerified = false;
         }
     }
