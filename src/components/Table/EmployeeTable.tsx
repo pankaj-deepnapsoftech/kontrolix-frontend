@@ -280,23 +280,61 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                                   : "Pending"}
                               </p>
                             ) : cell.column.id === "role" ? (
-                              <p fontSize="xs">
-                                {row.original.isSuper
-                                  ? "Super Admin"
-                                  : (() => {
-                                      const r = row.original?.role;
-                                      if (!r) return "No Role";
-                                      if (typeof r === "object") {
-                                        return (
-                                          r.name ||
-                                          r.role ||
-                                          r.label ||
-                                          "No Role"
-                                        );
+                              <div>
+                                {row.original.isSuper ? (
+                                  <p fontSize="xs">Super Admin</p>
+                                ) : (() => {
+                                    const r = row.original?.role;
+                                    if (!r) return <p fontSize="xs">No Role</p>;
+                                    
+                                    // Handle array of roles
+                                    if (Array.isArray(r)) {
+                                      if (r.length === 0) {
+                                        return <p fontSize="xs">No Role</p>;
                                       }
-                                      return r || "No Role";
-                                    })()}
-                              </p>
+                                      return (
+                                        <div className="flex flex-wrap gap-1">
+                                          {r.map((roleItem: any, idx: number) => {
+                                            const roleName = 
+                                              typeof roleItem === "object" && roleItem !== null
+                                                ? (roleItem.name || roleItem.role || roleItem.label || "Role")
+                                                : roleItem || "Role";
+                                            return (
+                                              <span
+                                                key={idx}
+                                                className="inline-block px-2 py-0.5 rounded text-xs font-medium"
+                                                style={{
+                                                  backgroundColor: colors.primary[50],
+                                                  color: colors.primary[700],
+                                                }}
+                                              >
+                                                {roleName}
+                                              </span>
+                                            );
+                                          })}
+                                        </div>
+                                      );
+                                    }
+                                    
+                                    // Handle single role object
+                                    if (typeof r === "object" && r !== null) {
+                                      const roleName = r.name || r.role || r.label || "No Role";
+                                      return (
+                                        <span
+                                          className="inline-block px-2 py-0.5 rounded text-xs font-medium"
+                                          style={{
+                                            backgroundColor: colors.primary[50],
+                                            color: colors.primary[700],
+                                          }}
+                                        >
+                                          {roleName}
+                                        </span>
+                                      );
+                                    }
+                                    
+                                    return <p fontSize="xs">{r || "No Role"}</p>;
+                                  })()}
+                              </div>
                             ) : (
                               cell.render("Cell")
                             )}

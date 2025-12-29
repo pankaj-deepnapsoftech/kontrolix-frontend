@@ -41,15 +41,28 @@ const UpdateEmployee: React.FC<UpdateEmployeeProps> = ({
   const updateEmployeeHandler = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!role || !role?.value) {
+    if (!role || (Array.isArray(role) && role.length === 0)) {
       toast.error("Please provide all the required fields");
       return;
     }
+    
     try {
       setIsUpdatingEmployee(true);
+      // Handle multiple roles (array) - since isMulti is enabled
+      // Extract array of role IDs from selected roles
+      let roleIds: string[] = [];
+      if (Array.isArray(role) && role.length > 0) {
+        roleIds = role.map((r) => r.value).filter(Boolean);
+      }
+
+      if (roleIds.length === 0) {
+        toast.error("Please select at least one role");
+        return;
+      }
+
       const response = await updateEmployee({
         _id: employeeId,
-        role: role.value,
+        role: roleIds,
       }).unwrap();
       toast.success(response.message);
       fetchEmployeesHandler();
@@ -83,10 +96,20 @@ const UpdateEmployee: React.FC<UpdateEmployeeProps> = ({
       setPhone(data.user.phone);
       
       const userRole = data.user?.role;
-      if (userRole && typeof userRole === 'object' && userRole.name) {
-        setRole({ value: userRole._id, label: userRole.name });
+      // Handle role initialization - support both array and single role for backward compatibility
+      if (Array.isArray(userRole) && userRole.length > 0) {
+        // Array of roles - convert to select format
+        const formattedRoles = userRole.map((r: any) => ({
+          value: typeof r === 'object' && r !== null && r._id ? r._id : r.value || r,
+          label: typeof r === 'object' && r !== null && (r.name || r.role) ? (r.name || r.role) : r.label || 'Role'
+        })).filter((r: any) => r.value); // Filter out invalid entries
+        setRole(formattedRoles as { value: string; label: string }[]);
+      } else if (userRole && typeof userRole === 'object' && userRole._id) {
+        // Single role object (backward compatibility) - convert to array format for multi-select
+        setRole([{ value: userRole._id, label: (userRole.name || userRole.role || 'Role') as string }]);
       } else {
-        setRole(userRole);
+        // Fallback - empty array
+        setRole([]);
       }
 
       setIsVerified(data.user.isVerified);
