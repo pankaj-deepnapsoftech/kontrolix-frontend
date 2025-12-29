@@ -315,23 +315,6 @@ const UpdateSupervisor: React.FC<UpdateSupervisorProps> = ({
                 />
               </FormControl>
 
-              <FormControl>
-                <FormLabel fontWeight="bold" color="gray.700">
-                  Address
-                </FormLabel>
-                <Input
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Enter address (optional)"
-                  size="lg"
-                  borderColor={colors.border.medium}
-                  _hover={{ borderColor: colors.border.dark }}
-                  _focus={{
-                    borderColor: colors.primary[500],
-                    boxShadow: `0 0 0 1px ${colors.primary[500]}`,
-                  }}
-                />
-              </FormControl>
 
               <FormControl isRequired>
                 <FormLabel fontWeight="bold" color="gray.700">
