@@ -28,6 +28,8 @@ import { TbLockAccess } from "react-icons/tb";
 import MachineInfo from "../pages/MachineInfo";
 import { MdOutlineSpeed } from "react-icons/md";
 import StoppageInfo from "../pages/StoppageInfo";
+import { IoIosPeople } from "react-icons/io";
+import Supervisor from "../pages/Supervisor";
 const routes = [
   {
     name: "Live Data",
@@ -44,6 +46,13 @@ const routes = [
   //   isSublink: false,
   // },
   {
+    name: "Supervisor",
+    icon: <IoIosPeople />,
+    path: "supervisor",
+    element: <Supervisor />,
+    isSublink: false,
+  },
+  {
     name: "Employees",
     icon: <FaPeopleGroup />,
     path: "employee",
@@ -55,7 +64,7 @@ const routes = [
     icon: <Component />,
     path: "machine-history",
     element: <MachineHistory />,
-    isSublink: false
+    isSublink: false,
   },
   // {
   //   name: "Sensors",
@@ -115,13 +124,6 @@ const routes = [
     element: <StoppageInfo />,
     isSublink: false,
   },
-  //   {
-  //     name: "Merchant",
-  //     icon: <IoIosPeople />,
-  //     path: "merchant",
-  //     element: <Parties />,
-  //     isSublink: false,
-  //   },
   //   {
   //     name: "Inventory",
   //     icon: <MdOutlineShoppingCart />,
