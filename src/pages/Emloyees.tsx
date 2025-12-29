@@ -189,6 +189,30 @@ const Employees: React.FC = () => {
     }
   };
 
+  const deleteEmployeeHandler = async (id: string) => {
+    try {
+      const response = await fetch(
+        process.env.REACT_APP_BACKEND_URL + "auth/user",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+          body: JSON.stringify({ _id: id }),
+        }
+      );
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result?.message || "Failed to delete employee");
+      }
+      toast.success(result?.message || "Employee deleted successfully");
+      fetchEmployeesHandler();
+    } catch (error: any) {
+      toast.error(error?.message || "Something went wrong");
+    }
+  };
+
   useEffect(() => {
     fetchEmployeesHandler();
   }, []);
@@ -448,6 +472,7 @@ const Employees: React.FC = () => {
                 openEmployeeDetailsDrawerHandler
               }
               openUpdateEmployeeDrawerHandler={openUpdateEmployeeDrawerHandler}
+              deleteEmployeeHandler={deleteEmployeeHandler}
               isLoadingEmployees={false}
               approveEmployeeHandler={approveEmployeeHandler}
               bulkApproveEmployeesHandler={bulkApproveEmployeesHandler}

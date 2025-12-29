@@ -251,7 +251,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                         </Th>
                       ))}
                       {/* Show Actions column if there are any actions available */}
-                      {(openEmployeeDetailsDrawerHandler || openUpdateEmployeeDrawerHandler || (!isSupervisor && deleteEmployeeHandler)) && (
+                      {(openEmployeeDetailsDrawerHandler || openUpdateEmployeeDrawerHandler || deleteEmployeeHandler) && (
                         <Th color={colors.table.headerText}>Actions</Th>
                       )}
                     </Tr>
@@ -346,7 +346,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                           </Td>
                         ))}
                         {/* Show Actions cell if there are any actions available */}
-                        {(openEmployeeDetailsDrawerHandler || openUpdateEmployeeDrawerHandler || (!isSupervisor && deleteEmployeeHandler)) && (
+                        {(openEmployeeDetailsDrawerHandler || openUpdateEmployeeDrawerHandler || deleteEmployeeHandler) && (
                           <Td fontSize="sm">
                             <div className="flex items-center gap-1">
                             {openEmployeeDetailsDrawerHandler && (
@@ -430,26 +430,35 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                                 </svg>
                               </button>
                             )}
-                            {/* Hide Delete button for supervisors */}
-                            {!isSupervisor && deleteEmployeeHandler && (
+                            {/* Delete button - visible to all but only admin can actually delete */}
+                            {deleteEmployeeHandler && (
                               <button
                                 onClick={() =>
                                   deleteEmployeeHandler(row.original._id)
                                 }
-                                className="p-1.5 rounded-md transition-all duration-200 hover:shadow-md"
+                                disabled={isSupervisor}
+                                className={`p-1.5 rounded-md transition-all duration-200 ${
+                                  isSupervisor 
+                                    ? 'opacity-50 cursor-not-allowed' 
+                                    : 'hover:shadow-md'
+                                }`}
                                 style={{
                                   color: colors.error[600],
                                   backgroundColor: colors.error[50],
                                 }}
                                 onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor =
-                                    colors.error[100];
+                                  if (!isSupervisor) {
+                                    e.currentTarget.style.backgroundColor =
+                                      colors.error[100];
+                                  }
                                 }}
                                 onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor =
-                                    colors.error[50];
+                                  if (!isSupervisor) {
+                                    e.currentTarget.style.backgroundColor =
+                                      colors.error[50];
+                                  }
                                 }}
-                                title="Delete"
+                                title={isSupervisor ? "Only admin can delete employees" : "Delete"}
                               >
                                 <svg
                                   className="w-3.5 h-3.5"
