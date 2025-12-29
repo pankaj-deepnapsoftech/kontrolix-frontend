@@ -27,7 +27,8 @@ const UpdateEmployee: React.FC<UpdateEmployeeProps> = ({
   const [lastname, setLastname] = useState<string | undefined>();
   const [phone, setPhone] = useState<string | undefined>();
   const [email, setEmail] = useState<string | undefined>();
-  const [role, setRole] = useState<any | undefined>();
+  const [role, setRole] = useState<{ value: string; label: string }[]>([]);
+
   const [isSuper, setIsSuper] = useState<boolean | undefined>();
   const [isVerified, setIsVerified] = useState<string | undefined>();
 
@@ -209,10 +210,11 @@ const UpdateEmployee: React.FC<UpdateEmployeeProps> = ({
                   Machine Role
                 </FormLabel>
                 <Select
-                  required
+                  isMulti
                   value={role}
                   options={roleOptions}
                   onChange={(e: any) => setRole(e)}
+                  closeMenuOnSelect={false}
                   styles={{
                     control: (provided: any) => ({
                       ...provided,
