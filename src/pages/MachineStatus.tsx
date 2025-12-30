@@ -77,8 +77,7 @@ const MachineStatus: React.FC = () => {
   const machineApiUrl = BACKEND_API_BASE + "plc/all";
   const socketUrl = SOCKET_BASE_URL;
 
-  // Store API summary data for statistics cards
-  const [apiSummaryData, setApiSummaryData] = useState<any>(null);
+  // Summary data will be computed from filteredData
 
   // Format duration in human-readable format (same as StoppageInfo)
   const formatDuration = (seconds: number): string => {
@@ -275,7 +274,6 @@ const MachineStatus: React.FC = () => {
         setRawPlcRows(result.data);
         const transformedData = transformMachineData(result.data);
         setMachineData(transformedData);
-        setApiSummaryData(buildSummary(transformedData));
         setLastUpdated(new Date());
       } catch (error: any) {
         console.error("Error fetching PLC data:", error);
@@ -619,7 +617,6 @@ const MachineStatus: React.FC = () => {
         // Transform and update immediately
         const transformed = transformMachineData(updated);
         setMachineData(transformed);
-        setApiSummaryData(buildSummary(transformed));
         setLastUpdated(new Date());
         
         console.log("✅ Updated machine data. Total machines:", transformed.length);
@@ -640,7 +637,6 @@ const MachineStatus: React.FC = () => {
     const interval = setInterval(() => {
       const transformed = transformMachineData(rawPlcRows);
       setMachineData(transformed);
-      setApiSummaryData(buildSummary(transformed));
     }, 1000);
     return () => clearInterval(interval);
   }, [rawPlcRows]);
@@ -689,6 +685,11 @@ const MachineStatus: React.FC = () => {
       return true;
     });
   }, [machineData, auth?.isSupervisor, auth?.isSuper, supervisorResources, employeeResources, selectedMachine, selectedBrand, selectedProtocol, selectedStatus]);
+
+  // Calculate summary from filtered data (so supervisors/employees only see their assigned machines' production)
+  const apiSummaryData = useMemo(() => {
+    return buildSummary(filteredData);
+  }, [filteredData]);
 
   // Prepare chart data
   const chartData = filteredData.map((item: any) => ({
