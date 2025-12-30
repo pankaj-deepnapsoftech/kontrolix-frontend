@@ -72,6 +72,7 @@ const StoppageInfo: React.FC = () => {
   const [availableMachines, setAvailableMachines] = useState<string[]>([]);
   const [currentMachineStatus, setCurrentMachineStatus] = useState<Record<string, { status: string; stopped_at: string | null; timestamp: string }>>({});
   const [supervisorResources, setSupervisorResources] = useState<string[]>([]);
+  const [employeeResources, setEmployeeResources] = useState<string[]>([]); // Resource names assigned to employee
   const [page, setPage] = useState(1);
   const LIMIT = 10;
   
@@ -227,6 +228,55 @@ const StoppageInfo: React.FC = () => {
     }
   }, [cookies, auth?.isSupervisor, auth?.id]);
 
+  // Fetch employee's assigned resources
+  const fetchEmployeeResources = useCallback(async () => {
+    try {
+      // Only fetch if user is an employee (not supervisor/admin)
+      if (auth?.isSupervisor || auth?.isSuper || !auth?.id) {
+        setEmployeeResources([]);
+        return;
+      }
+      
+      // Fetch employee's user details to get role
+      const resp = await fetch(
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:9023/api/") +
+          `auth/user/${auth.id}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+        }
+      );
+      const json = await resp.json();
+      if (json.success && json.user?.role) {
+        // Extract resource names from employee's role
+        const userRole = json.user.role;
+        let resourceNames: string[] = [];
+        
+        if (Array.isArray(userRole) && userRole.length > 0) {
+          // Role is an array of resources
+          resourceNames = userRole.map((r: any) => {
+            if (typeof r === 'object' && r !== null) {
+              return norm(r.name || r);
+            }
+            return norm(r);
+          }).filter(Boolean);
+        } else if (userRole && typeof userRole === 'object') {
+          // Single role object (backward compatibility)
+          resourceNames = [norm(userRole.name || userRole)];
+        }
+        
+        setEmployeeResources(resourceNames);
+      } else {
+        setEmployeeResources([]);
+      }
+    } catch (error) {
+      console.error("Error fetching employee resources:", error);
+      setEmployeeResources([]);
+    }
+  }, [cookies, auth?.isSupervisor, auth?.isSuper, auth?.id]);
+
   useEffect(() => {
     fetchMachines();
     fetchCurrentMachineStatus();
@@ -235,7 +285,12 @@ const StoppageInfo: React.FC = () => {
     } else {
       setSupervisorResources([]);
     }
-  }, [auth?.isSupervisor, auth?.id]);
+    if (!auth?.isSupervisor && !auth?.isSuper && auth?.id) {
+      fetchEmployeeResources();
+    } else {
+      setEmployeeResources([]);
+    }
+  }, [auth?.isSupervisor, auth?.isSuper, auth?.id, fetchSupervisorResources, fetchEmployeeResources]);
 
   useEffect(() => {
     fetchStatusLogs();
@@ -284,16 +339,26 @@ const StoppageInfo: React.FC = () => {
     });
   };
 
-  // Filter status logs based on supervisor resources
+  // Filter status logs based on supervisor/employee resources
   const filteredStatusLogs = useMemo(() => {
+    // If supervisor, filter by supervisor resources
     if (auth?.isSupervisor && supervisorResources.length > 0) {
       return statusLogs.filter((log) => {
         const itemBrand = norm(log.plc_brand);
         return supervisorResources.includes(itemBrand);
       });
     }
+    
+    // If employee (not supervisor/admin), filter by employee resources
+    if (!auth?.isSupervisor && !auth?.isSuper && employeeResources.length > 0) {
+      return statusLogs.filter((log) => {
+        const itemBrand = norm(log.plc_brand);
+        return employeeResources.includes(itemBrand);
+      });
+    }
+    
     return statusLogs;
-  }, [statusLogs, auth?.isSupervisor, supervisorResources]);
+  }, [statusLogs, auth?.isSupervisor, auth?.isSuper, supervisorResources, employeeResources]);
 
   // Process status logs to calculate stoppage events and durations
   const stoppageEvents = useMemo(() => {

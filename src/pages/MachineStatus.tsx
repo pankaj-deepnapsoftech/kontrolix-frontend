@@ -60,6 +60,7 @@ const MachineStatus: React.FC = () => {
   const [productsByResource, setProductsByResource] = useState<any>({});
   const [resourceIdToName, setResourceIdToName] = useState<any>({});
   const [supervisorResources, setSupervisorResources] = useState<string[]>([]); // Resource names assigned to supervisor
+  const [employeeResources, setEmployeeResources] = useState<string[]>([]); // Resource names assigned to employee
   const norm = (s: any) => String(s || "").trim().toLowerCase();
   const [cookies] = useCookies();
   const auth = useSelector((state: any) => state?.auth);
@@ -474,6 +475,55 @@ const MachineStatus: React.FC = () => {
     }
   }, [cookies, auth?.isSupervisor, auth?.id]);
 
+  // Fetch employee's assigned resources
+  const fetchEmployeeResources = useCallback(async () => {
+    try {
+      // Only fetch if user is an employee (not supervisor/admin)
+      if (auth?.isSupervisor || auth?.isSuper || !auth?.id) {
+        setEmployeeResources([]);
+        return;
+      }
+      
+      // Fetch employee's user details to get role
+      const resp = await fetch(
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:9023/api/") +
+          `auth/user/${auth.id}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+        }
+      );
+      const json = await resp.json();
+      if (json.success && json.user?.role) {
+        // Extract resource names from employee's role
+        const userRole = json.user.role;
+        let resourceNames: string[] = [];
+        
+        if (Array.isArray(userRole) && userRole.length > 0) {
+          // Role is an array of resources
+          resourceNames = userRole.map((r: any) => {
+            if (typeof r === 'object' && r !== null) {
+              return norm(r.name || r);
+            }
+            return norm(r);
+          }).filter(Boolean);
+        } else if (userRole && typeof userRole === 'object') {
+          // Single role object (backward compatibility)
+          resourceNames = [norm(userRole.name || userRole)];
+        }
+        
+        setEmployeeResources(resourceNames);
+      } else {
+        setEmployeeResources([]);
+      }
+    } catch (error) {
+      console.error("Error fetching employee resources:", error);
+      setEmployeeResources([]);
+    }
+  }, [cookies, auth?.isSupervisor, auth?.isSuper, auth?.id]);
+
   // Fetch supervisor resources only once when auth changes
   useEffect(() => {
     if (auth?.isSupervisor) {
@@ -482,6 +532,15 @@ const MachineStatus: React.FC = () => {
       setSupervisorResources([]);
     }
   }, [auth?.isSupervisor, auth?.id, fetchSupervisorResources]);
+
+  // Fetch employee resources only once when auth changes
+  useEffect(() => {
+    if (!auth?.isSupervisor && !auth?.isSuper && auth?.id) {
+      fetchEmployeeResources();
+    } else {
+      setEmployeeResources([]);
+    }
+  }, [auth?.isSupervisor, auth?.isSuper, auth?.id, fetchEmployeeResources]);
 
   // Fetch machine data and other initial data
   useEffect(() => {
@@ -535,6 +594,15 @@ const MachineStatus: React.FC = () => {
         return;
       }
       
+      // Filter socket updates for employees - only show assigned machines
+      if (!auth?.isSupervisor && !auth?.isSuper && employeeResources.length > 0) {
+        const docBrand = norm(doc.plc_brand || "");
+        if (!employeeResources.includes(docBrand)) {
+          // Employee doesn't have access to this machine, ignore the update
+          return;
+        }
+      }
+      
       setRawPlcRows((prev) => {
         // Remove old entries for the same machine (brand + model) to keep only latest
         const machineKey = `${doc.plc_brand}_${doc.plc_model}`;
@@ -566,7 +634,7 @@ const MachineStatus: React.FC = () => {
         socketRef.current = null;
       }
     };
-  }, [socketUrl]);
+  }, [socketUrl, auth?.isSupervisor, auth?.isSuper, employeeResources]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -599,6 +667,14 @@ const MachineStatus: React.FC = () => {
         }
       }
       
+      // If employee (not supervisor/admin), only show machines matching their assigned resources
+      if (!auth?.isSupervisor && !auth?.isSuper && employeeResources.length > 0) {
+        const itemBrand = norm(item.plcBrand);
+        if (!employeeResources.includes(itemBrand)) {
+          return false;
+        }
+      }
+      
       if (selectedMachine !== "all" && item.machineKey !== selectedMachine)
         return false;
       if (selectedBrand !== "all" && item.plcBrand !== selectedBrand)
@@ -612,7 +688,7 @@ const MachineStatus: React.FC = () => {
         return false;
       return true;
     });
-  }, [machineData, auth?.isSupervisor, supervisorResources, selectedMachine, selectedBrand, selectedProtocol, selectedStatus]);
+  }, [machineData, auth?.isSupervisor, auth?.isSuper, supervisorResources, employeeResources, selectedMachine, selectedBrand, selectedProtocol, selectedStatus]);
 
   // Prepare chart data
   const chartData = filteredData.map((item: any) => ({

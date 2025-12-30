@@ -154,6 +154,7 @@ const MachineHistory: React.FC = () => {
   const [productsByResource, setProductsByResource] = useState<any>({});
   const [resourceIdToName, setResourceIdToName] = useState<any>({});
   const [supervisorResources, setSupervisorResources] = useState<string[]>([]);
+  const [employeeResources, setEmployeeResources] = useState<string[]>([]); // Resource names assigned to employee
   const LIMIT = 10;
   
   const norm = (s: any) => String(s || "").trim().toLowerCase();
@@ -373,6 +374,55 @@ const MachineHistory: React.FC = () => {
     }
   }, [cookies, auth?.isSupervisor, auth?.id]);
 
+  // Fetch employee's assigned resources
+  const fetchEmployeeResources = useCallback(async () => {
+    try {
+      // Only fetch if user is an employee (not supervisor/admin)
+      if (auth?.isSupervisor || auth?.isSuper || !auth?.id) {
+        setEmployeeResources([]);
+        return;
+      }
+      
+      // Fetch employee's user details to get role
+      const resp = await fetch(
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:9023/api/") +
+          `auth/user/${auth.id}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+        }
+      );
+      const json = await resp.json();
+      if (json.success && json.user?.role) {
+        // Extract resource names from employee's role
+        const userRole = json.user.role;
+        let resourceNames: string[] = [];
+        
+        if (Array.isArray(userRole) && userRole.length > 0) {
+          // Role is an array of resources
+          resourceNames = userRole.map((r: any) => {
+            if (typeof r === 'object' && r !== null) {
+              return norm(r.name || r);
+            }
+            return norm(r);
+          }).filter(Boolean);
+        } else if (userRole && typeof userRole === 'object') {
+          // Single role object (backward compatibility)
+          resourceNames = [norm(userRole.name || userRole)];
+        }
+        
+        setEmployeeResources(resourceNames);
+      } else {
+        setEmployeeResources([]);
+      }
+    } catch (error) {
+      console.error("Error fetching employee resources:", error);
+      setEmployeeResources([]);
+    }
+  }, [cookies, auth?.isSupervisor, auth?.isSuper, auth?.id]);
+
   useEffect(() => {
     fetchAssignments();
     fetchResources();
@@ -381,7 +431,12 @@ const MachineHistory: React.FC = () => {
     } else {
       setSupervisorResources([]);
     }
-  }, [auth?.isSupervisor, auth?.id]);
+    if (!auth?.isSupervisor && !auth?.isSuper && auth?.id) {
+      fetchEmployeeResources();
+    } else {
+      setEmployeeResources([]);
+    }
+  }, [auth?.isSupervisor, auth?.isSuper, auth?.id, fetchSupervisorResources, fetchEmployeeResources]);
 
   useEffect(() => {
     if (Object.keys(resourceIdToName || {}).length > 0) {
@@ -393,16 +448,26 @@ const MachineHistory: React.FC = () => {
     fetchPlcData();
   }, [period, page]);
 
-  // Filter data based on supervisor resources
+  // Filter data based on supervisor/employee resources
   const filteredPlcData = useMemo(() => {
+    // If supervisor, filter by supervisor resources
     if (auth?.isSupervisor && supervisorResources.length > 0) {
       return plcData.filter((item) => {
         const itemBrand = norm(item.plc_brand);
         return supervisorResources.includes(itemBrand);
       });
     }
+    
+    // If employee (not supervisor/admin), filter by employee resources
+    if (!auth?.isSupervisor && !auth?.isSuper && employeeResources.length > 0) {
+      return plcData.filter((item) => {
+        const itemBrand = norm(item.plc_brand);
+        return employeeResources.includes(itemBrand);
+      });
+    }
+    
     return plcData;
-  }, [plcData, auth?.isSupervisor, supervisorResources]);
+  }, [plcData, auth?.isSupervisor, auth?.isSuper, supervisorResources, employeeResources]);
 
   // Use filtered data (already paginated from API, but filtered for supervisor)
   const paginatedData = filteredPlcData;

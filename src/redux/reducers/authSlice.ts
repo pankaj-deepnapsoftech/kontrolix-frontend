@@ -25,8 +25,12 @@ const authSlice = createSlice({
             // If supervisor, give access to all modules except supervisor
             if (action.payload.isSupervisor) {
                 state.allowedroutes = ["", "employee", "machine-history", "resources", "product", "machine-info", "stoppage-info", "userprofile"];
+            } else if (action.payload.isSuper) {
+                // Super admin has access to all routes
+                state.allowedroutes = [];
             } else {
-                state.allowedroutes = action.payload?.role?.permissions || [];
+                // Employee: Only allow specific routes - Live Data, Machine History, Machine Info, Stoppage Info, My Profile
+                state.allowedroutes = ["", "machine-history", "machine-info", "stoppage-info", "userprofile"];
             }
             state.isSuper = action.payload.isSuper;
             state.isSupervisor = action.payload.isSupervisor || false;
