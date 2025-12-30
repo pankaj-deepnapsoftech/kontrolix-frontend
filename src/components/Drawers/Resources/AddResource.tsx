@@ -264,10 +264,16 @@ const AddResource = ({
         let opts = (json.data || []).map((b: string) => ({ value: b, label: b }));
         
         // If supervisor, filter to only show assigned machines
-        if (auth?.isSupervisor && supervisorResources.length > 0) {
-          opts = opts.filter((opt: any) => 
-            supervisorResources.includes(norm(opt.value))
-          );
+        if (auth?.isSupervisor) {
+          if (supervisorResources.length > 0) {
+            // Only show assigned machines
+            opts = opts.filter((opt: any) => 
+              supervisorResources.includes(norm(opt.value))
+            );
+          } else {
+            // If no machines assigned, show empty list with a message
+            opts = [{ value: "__no_machine__", label: "No machine assigned", isDisabled: true }];
+          }
         }
         
         setBrandOptions(opts);
@@ -276,9 +282,12 @@ const AddResource = ({
           if (m) {
             setSelectedName(m);
           } else {
-            const custom = { value: editResource.name, label: editResource.name };
-            setBrandOptions((prev) => [...prev, custom]);
-            setSelectedName(custom);
+            // Only allow custom name if not the "no machine" placeholder
+            if (editResource.name !== "__no_machine__") {
+              const custom = { value: editResource.name, label: editResource.name };
+              setBrandOptions((prev) => [...prev, custom]);
+              setSelectedName(custom);
+            }
           }
         }
       } catch (err: any) {
@@ -411,7 +420,11 @@ const AddResource = ({
             </FormLabel>
             <Select
               className="rounded mt-2 border"
-              placeholder="Select Name"
+              placeholder={
+                auth?.isSupervisor && supervisorResources.length === 0
+                  ? "No machine assigned"
+                  : "Select Name"
+              }
               name="name"
               value={selectedName}
               options={[
@@ -419,10 +432,11 @@ const AddResource = ({
                 ...(auth?.isSuper ? [{ value: "__add_new__", label: "+ Add New Name" }] : [])
               ]}
               styles={customStyles}
+              isDisabled={auth?.isSupervisor && supervisorResources.length === 0}
               onChange={(selected: any) => {
                 if (selected?.value === "__add_new__") {
                   setShowNewNameInput(true);
-                } else {
+                } else if (selected?.value !== "__no_machine__") {
                   setSelectedName(selected);
                   formik.setFieldValue("name", selected?.value || "");
                 }
