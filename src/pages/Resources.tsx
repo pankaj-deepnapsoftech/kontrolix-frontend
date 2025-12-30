@@ -6,6 +6,7 @@ import { Button } from "@chakra-ui/react";
 import { MdOutlineRefresh } from "react-icons/md";
 import ResourceTable from "../components/Table/ResourceTable";
 import AddResource from "../components/Drawers/Resources/AddResource";
+import ResourceDetails from "../components/Drawers/Resources/ResourceDetails";
 import axios from "axios";
 import { useCookies } from "react-cookie";
 import { toast } from "react-toastify";
@@ -28,6 +29,9 @@ const Resources = () => {
   const [isLoadingResources, setIsLoadingResources] = useState(false);
   const [isAddResourceDrawerOpened, setIsAddResourceDrawerOpened] =
     useState(false);
+  const [isResourceDetailsDrawerOpened, setIsResourceDetailsDrawerOpened] =
+    useState(false);
+  const [selectedResourceId, setSelectedResourceId] = useState<string | undefined>(undefined);
   const [editResource, setEditResource] = useState<Resource | null>(null);
   const openAddResourceDrawerHandler = () => {
     setEditResource(null); // Clear edit state when opening add drawer
@@ -37,6 +41,16 @@ const Resources = () => {
   const closeAddResourceDrawerHandler = () => {
     setIsAddResourceDrawerOpened(false);
     setEditResource(null); // Always clear edit state when closing drawer
+  };
+
+  const openResourceDetailsDrawerHandler = (resourceId: string) => {
+    setSelectedResourceId(resourceId);
+    setIsResourceDetailsDrawerOpened(true);
+  };
+
+  const closeResourceDetailsDrawerHandler = () => {
+    setIsResourceDetailsDrawerOpened(false);
+    setSelectedResourceId(undefined);
   };
 
   const fetchResourcesHandler = async () => {
@@ -164,6 +178,13 @@ const Resources = () => {
         />
       )}
 
+      {isResourceDetailsDrawerOpened && (
+        <ResourceDetails
+          closeDrawerHandler={closeResourceDetailsDrawerHandler}
+          resourceId={selectedResourceId}
+        />
+      )}
+
       <div className="bg-white  shadow-sm border border-gray-100 p-4 mb-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           {/* Title Section */}
@@ -254,6 +275,7 @@ const Resources = () => {
           openUpdateResourceDrawerHandler={openAddResourceDrawerHandler}
           setAddResourceDrawerOpened={setIsAddResourceDrawerOpened}
           bulkDeleteResourcesHandler={bulkDeleteResourcesHandler}
+          openResourceDetailsDrawerHandler={openResourceDetailsDrawerHandler}
         />
       </div>
     </div>

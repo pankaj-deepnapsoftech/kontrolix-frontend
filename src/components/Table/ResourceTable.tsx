@@ -16,6 +16,7 @@ import EmptyData from "../../ui/emptyData";
 import { colors } from "../../theme/colors";
 import { useCookies } from "react-cookie";
 import { SquarePen } from "lucide-react";
+import { useSelector } from "react-redux";
 import {
   Select,
   Table,
@@ -71,6 +72,8 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   const [cookies] = useCookies();
+  const auth = useSelector((state: any) => state?.auth);
+  const isAdmin = auth?.isSuper;
   const columns = useMemo(
     () => [
       { Header: "CustomId", accessor: "customid" },
@@ -265,7 +268,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                   zIndex={1}
                 >
                   <Tr>
-                    {cookies?.role === "admin" && (
+                    {isAdmin && (
                       <Th
                         color={colors.table.headerText}
                         style={{ width: "40px" }}
@@ -279,9 +282,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                     <Th color={colors.table.headerText}>Specification</Th>
                     <Th color={colors.table.headerText}>Created On</Th>
                     <Th color={colors.table.headerText}>Last Updated</Th>
-                    {cookies?.role === "admin" && (
-                      <Th color={colors.table.headerText}>Actions</Th>
-                    )}
+                    <Th color={colors.table.headerText}>Actions</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
@@ -289,7 +290,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                     prepareRow(row);
                     return (
                       <Tr key={row.id} _hover={{ bg: colors.table.hover }}>
-                        {cookies?.role === "admin" && (
+                        {isAdmin && (
                           <Td fontSize="xs" style={{ width: "40px" }}>
                             
                           </Td>
@@ -330,83 +331,82 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                               )
                             : "—"}
                         </Td>
-                        {cookies?.role === "admin" && (
-                          <Td fontSize="sm">
-                            <div className="flex items-center gap-1">
-                              {openResourceDetailsDrawerHandler && (
-                                <button
-                                  onClick={() =>
-                                    openResourceDetailsDrawerHandler(
-                                      row.original._id
-                                    )
-                                  }
-                                  className="p-1.5 rounded-md transition-all duration-200 hover:shadow-md"
-                                  style={{
-                                    color: colors.secondary[600],
-                                    backgroundColor: colors.secondary[50],
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor =
-                                      colors.secondary[100];
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor =
-                                      colors.secondary[50];
-                                  }}
-                                  title="View Details"
-                                >
-                                  <MdOutlineVisibility size={14} />
-                                </button>
-                              )}
+                        <Td fontSize="sm">
+                          <div className="flex items-center gap-1">
+                            {openResourceDetailsDrawerHandler && (
                               <button
-                                onClick={() => {
-                                  setEditResource(row.original);
-                                  setAddResourceDrawerOpened(true);
-                                }}
+                                onClick={() =>
+                                  openResourceDetailsDrawerHandler(
+                                    row.original._id
+                                  )
+                                }
                                 className="p-1.5 rounded-md transition-all duration-200 hover:shadow-md"
                                 style={{
-                                  color: colors.primary[600],
-                                  backgroundColor: colors.primary[50],
+                                  color: colors.secondary[600],
+                                  backgroundColor: colors.secondary[50],
                                 }}
                                 onMouseEnter={(e) => {
                                   e.currentTarget.style.backgroundColor =
-                                    colors.primary[100];
+                                    colors.secondary[100];
                                 }}
                                 onMouseLeave={(e) => {
                                   e.currentTarget.style.backgroundColor =
-                                    colors.primary[50];
+                                    colors.secondary[50];
                                 }}
-                                title="Edit"
+                                title="View Details"
                               >
-                                <MdEdit size={14} />
+                                <MdOutlineVisibility size={14} />
                               </button>
-                              {deleteResourceHandler && (
-                                <button
-                                  onClick={() => {
-                                    setdeleteId(row.original._id);
-                                    setshowDeletePage(true);
-                                  }}
-                                  className="p-1.5 rounded-md transition-all duration-200 hover:shadow-md"
-                                  style={{
-                                    color: colors.error[600],
-                                    backgroundColor: colors.error[50],
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor =
-                                      colors.error[100];
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor =
-                                      colors.error[50];
-                                  }}
-                                  title="Delete"
-                                >
-                                  <MdDeleteOutline size={14} />
-                                </button>
-                              )}
-                            </div>
-                          </Td>
-                        )}
+                            )}
+                            <button
+                              onClick={() => {
+                                setEditResource(row.original);
+                                setAddResourceDrawerOpened(true);
+                              }}
+                              className="p-1.5 rounded-md transition-all duration-200 hover:shadow-md"
+                              style={{
+                                color: colors.primary[600],
+                                backgroundColor: colors.primary[50],
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor =
+                                  colors.primary[100];
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor =
+                                  colors.primary[50];
+                              }}
+                              title="Edit"
+                            >
+                              <MdEdit size={14} />
+                            </button>
+                            {/* Delete button - Only for admin */}
+                            {isAdmin && deleteResourceHandler && (
+                              <button
+                                onClick={() => {
+                                  setdeleteId(row.original._id);
+                                  setshowDeletePage(true);
+                                }}
+                                className="p-1.5 rounded-md transition-all duration-200 hover:shadow-md"
+                                style={{
+                                  color: colors.error[600],
+                                  backgroundColor: colors.error[50],
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    colors.error[100];
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    colors.error[50];
+                                }}
+                                title="Delete"
+                              >
+                                <MdDeleteOutline size={14} />
+                              </button>
+                            )}
+                          </div>
+                        </Td>
                       </Tr>
                     );
                   })}

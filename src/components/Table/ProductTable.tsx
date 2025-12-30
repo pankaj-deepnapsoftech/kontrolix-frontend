@@ -25,6 +25,7 @@ import Loading from "../../ui/Loading";
 import EmptyData from "../../ui/emptyData";
 import { colors } from "../../theme/colors";
 import { useCookies } from "react-cookie";
+import { useSelector } from "react-redux";
 
 const capitalizeWords = (str: string | undefined | null): string => {
   if (!str) return "";
@@ -122,6 +123,8 @@ const ProductTable: React.FC<ProductTableProps> = ({
   );
 
   const [cookies] = useCookies();
+  const auth = useSelector((state: any) => state?.auth);
+  const isAdmin = auth?.isSuper;
   // Bulk selection functions
   const handleSelectAll = (checked) => {
     if (checked) {
@@ -297,12 +300,14 @@ const ProductTable: React.FC<ProductTableProps> = ({
                   zIndex={1}
                 >
                   <Tr>
-                    <Th
-                      color={colors.table.headerText}
-                      style={{ width: "40px" }}
-                    >
-                      
-                    </Th>
+                    {isAdmin && (
+                      <Th
+                        color={colors.table.headerText}
+                        style={{ width: "40px" }}
+                      >
+                        
+                      </Th>
+                    )}
                     <Th color={colors.table.headerText}>Product ID</Th>
                     <Th color={colors.table.headerText}>Name</Th>
                     <Th color={colors.table.headerText}>Resource</Th>
@@ -315,9 +320,11 @@ const ProductTable: React.FC<ProductTableProps> = ({
                     prepareRow(row);
                     return (
                       <Tr key={row.id} _hover={{ bg: colors.table.hover }}>
-                        <Td fontSize="xs" style={{ width: "40px" }}>
-                          
-                        </Td>
+                        {isAdmin && (
+                          <Td fontSize="xs" style={{ width: "40px" }}>
+                            
+                          </Td>
+                        )}
                         <Td fontSize="sm" fontFamily="mono">
                           {row.original.product_id || "N/A"}
                         </Td>
@@ -390,31 +397,31 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                 <MdEdit size={14} />
                               </button>
                             )}
-                            {deleteProductHandler &&
-                              cookies?.role === "admin" && (
-                                <button
-                                  onClick={() => {
-                                    setdeleteId(row.original._id);
-                                    setshowDeletePage(true);
-                                  }}
-                                  className="p-1.5 rounded-md transition-all duration-200 hover:shadow-md"
-                                  style={{
-                                    color: colors.error[600],
-                                    backgroundColor: colors.error[50],
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor =
-                                      colors.error[100];
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor =
-                                      colors.error[50];
-                                  }}
-                                  title="Delete"
-                                >
-                                  <MdDeleteOutline size={14} />
-                                </button>
-                              )}
+                            {/* Delete button - Only for admin */}
+                            {isAdmin && deleteProductHandler && (
+                              <button
+                                onClick={() => {
+                                  setdeleteId(row.original._id);
+                                  setshowDeletePage(true);
+                                }}
+                                className="p-1.5 rounded-md transition-all duration-200 hover:shadow-md"
+                                style={{
+                                  color: colors.error[600],
+                                  backgroundColor: colors.error[50],
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    colors.error[100];
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    colors.error[50];
+                                }}
+                                title="Delete"
+                              >
+                                <MdDeleteOutline size={14} />
+                              </button>
+                            )}
                             {approveProductHandler && (
                               <button
                                 onClick={() =>
