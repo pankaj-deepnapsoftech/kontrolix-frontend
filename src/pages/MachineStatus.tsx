@@ -818,11 +818,23 @@ const MachineStatus: React.FC = () => {
   }, [filteredData]);
 
   // Get unique values for filters
-  const brands =
-    (allBrands && allBrands.length > 0
-      ? allBrands
-      : apiSummaryData?.brands ||
-        Array.from(new Set(machineData.map((item: any) => item.plcBrand))));
+  // For supervisor, only show brands from assigned resources
+  const brands = useMemo(() => {
+    const allBrandsList = 
+      (allBrands && allBrands.length > 0
+        ? allBrands
+        : apiSummaryData?.brands ||
+          Array.from(new Set(machineData.map((item: any) => item.plcBrand))));
+    
+    // Filter brands for supervisor based on assigned resources
+    if (auth?.isSupervisor && supervisorResources.length > 0) {
+      return allBrandsList.filter((brand: string) => 
+        supervisorResources.includes(norm(brand))
+      );
+    }
+    return allBrandsList;
+  }, [allBrands, apiSummaryData?.brands, machineData, auth?.isSupervisor, supervisorResources]);
+  
   const protocols =
     apiSummaryData?.protocols ||
     Array.from(new Set(machineData.map((item: any) => item.plcProtocol)));
@@ -1124,83 +1136,66 @@ const MachineStatus: React.FC = () => {
           </Card>
         </HStack>
 
-        {/* Filters */}
-        <Card>
-          <CardBody>
-            <HStack spacing={4} wrap="wrap">
-              {/* <Box>
-                <Text fontSize="sm" fontWeight="medium" color="gray.700" mb={2}>
-                  Machine
-                </Text>
-                <Select
-                  value={selectedMachine}
-                  onChange={(e) => setSelectedMachine(e.target.value)}
-                  size="sm"
-                  w="180px"
-                >
-                  <option value="all">All Machines</option>
-                  {availableMachines.map((machine: any) => (
-                    <option key={machine.key} value={machine.key}>
-                      {machine.label}
-                    </option>
-                  ))}
-                </Select>
-              </Box> */}
+        {/* Filters - Hide for employees, show for admin and supervisor */}
+        {!auth?.isSuper && !auth?.isSupervisor ? null : (
+          <Card>
+            <CardBody>
+              <HStack spacing={4} wrap="wrap">
+                <Box>
+                  <Text fontSize="sm" fontWeight="medium" color="gray.700" mb={2}>
+                    Machine
+                  </Text>
+                  <Select
+                    value={selectedBrand}
+                    onChange={(e) => setSelectedBrand(e.target.value)}
+                    size="sm"
+                    w="150px"
+                  >
+                    <option value="all">All Brands</option>
+                    {brands.map((brand: string) => (
+                      <option key={brand} value={brand}>
+                        {brand}
+                      </option>
+                    ))}
+                  </Select>
+                </Box>
 
-              <Box>
-                <Text fontSize="sm" fontWeight="medium" color="gray.700" mb={2}>
-                  Machine
-                </Text>
-                <Select
-                  value={selectedBrand}
-                  onChange={(e) => setSelectedBrand(e.target.value)}
-                  size="sm"
-                  w="150px"
-                >
-                  <option value="all">All Brands</option>
-                  {brands.map((brand: string) => (
-                    <option key={brand} value={brand}>
-                      {brand}
-                    </option>
-                  ))}
-                </Select>
-              </Box>
+                <Box>
+                  <Text fontSize="sm" fontWeight="medium" color="gray.700" mb={2}>
+                    Production Status
+                  </Text>
+                  <Select
+                    value={selectedProtocol}
+                    onChange={(e) => setSelectedProtocol(e.target.value)}
+                    size="sm"
+                    w="150px"
+                  >
+                    <option value="all">All</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </Select>
+                </Box>
 
-              <Box>
-                <Text fontSize="sm" fontWeight="medium" color="gray.700" mb={2}>
-                  Production Status
-                </Text>
-                <Select
-                  value={selectedProtocol}
-                  onChange={(e) => setSelectedProtocol(e.target.value)}
-                  size="sm"
-                  w="150px"
-                >
-                  <option value="all">All</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </Select>
-              </Box>
-
-              <Box>
-                <Text fontSize="sm" fontWeight="medium" color="gray.700" mb={2}>
-                  Running Status
-                </Text>
-                <Select
-                  value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  size="sm"
-                  w="150px"
-                >
-                  <option value="all">All Status</option>
-                  <option value="running">Running</option>
-                  <option value="idle">Idle</option>
-                  <option value="stopped">Stopped</option>
-                </Select>
-              </Box>
-            </HStack>
-          </CardBody>
-        </Card>
+                <Box>
+                  <Text fontSize="sm" fontWeight="medium" color="gray.700" mb={2}>
+                    Running Status
+                  </Text>
+                  <Select
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    size="sm"
+                    w="150px"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="running">Running</option>
+                    <option value="idle">Idle</option>
+                    <option value="stopped">Stopped</option>
+                  </Select>
+                </Box>
+              </HStack>
+            </CardBody>
+          </Card>
+        )}
 
         {/* Charts */}
         <Stack
