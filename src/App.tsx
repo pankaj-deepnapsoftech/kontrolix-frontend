@@ -30,9 +30,14 @@ const App: React.FC = () => {
                   return null;
                 }
                 
+                // Block resources route for supervisors
+                if (route.path === "resources" && isSupervisor) {
+                  return null;
+                }
+                
                 const isAllowed =
                   isSuper ||
-                  (isSupervisor && route.path !== "supervisor") ||
+                  (isSupervisor && route.path !== "supervisor" && route.path !== "resources") ||
                   allowedroutes.includes(route.path.replaceAll("/", ""));
                 if (route.isSublink) {
                   return (

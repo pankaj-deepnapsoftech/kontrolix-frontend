@@ -101,6 +101,11 @@ const Navigation: React.FC = () => {
                 return null;
               }
               
+              // Hide Resources for supervisors
+              if (route.path === "resources" && isSupervisor) {
+                return null;
+              }
+              
               // Hide Supervisor, Employees, Resources, and Product for employees
               if (!isSuper && !isSupervisor) {
                 const restrictedRoutes = ["supervisor", "employee", "resources", "product"];
