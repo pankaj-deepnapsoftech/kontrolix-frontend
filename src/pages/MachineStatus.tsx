@@ -331,8 +331,48 @@ const MachineStatus: React.FC = () => {
         );
         if (key) map[key] = names;
       });
-      setAssignmentsMap(map);
+      // Merge with existing assignments instead of overwriting
+      setAssignmentsMap((prev: any) => ({ ...prev, ...map }));
     } catch (_) {
+    }
+  }, [cookies]);
+
+  // Fetch employees for machines by brand using new API
+  const fetchEmployeesByMachineBrands = useCallback(async (brands: string[]) => {
+    if (!brands || brands.length === 0) return;
+    
+    try {
+      const map: any = {};
+      
+      // Fetch employees for each machine brand
+      await Promise.all(
+        brands.map(async (brand) => {
+          try {
+            const apiUrl = (process.env.REACT_APP_BACKEND_URL || "http://localhost:9023/api/") +
+              `resources/employees-by-machine?machineBrand=${encodeURIComponent(brand)}`;
+            
+            const resp = await fetch(apiUrl, {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${cookies?.access_token}`,
+              },
+            });
+            
+            const json = await resp.json();
+            
+            if (json.success && json.employeeNames && json.employeeNames.length > 0) {
+              map[brand] = json.employeeNames;
+            }
+          } catch (err) {
+            // Silent error handling
+          }
+        })
+      );
+      
+      // Update assignments map with new data (merge with existing)
+      setAssignmentsMap((prev: any) => ({ ...prev, ...map }));
+    } catch (error) {
+      // Silent error handling
     }
   }, [cookies]);
 
@@ -455,6 +495,13 @@ const MachineStatus: React.FC = () => {
       fetchProductsAll();
     }
   }, [resourceIdToName, fetchProductsAll]);
+
+  // Fetch employees for machine brands when brands are available
+  useEffect(() => {
+    if (allBrands && allBrands.length > 0) {
+      fetchEmployeesByMachineBrands(allBrands);
+    }
+  }, [allBrands, fetchEmployeesByMachineBrands]);
 
   const socketRef = useRef<any>(null);
   useEffect(() => {
