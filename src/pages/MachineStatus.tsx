@@ -22,6 +22,7 @@ import {
   StatHelpText,
   StatArrow,
   SimpleGrid,
+  Stack,
 } from "@chakra-ui/react";
 import {
   BarChart,
@@ -867,7 +868,6 @@ const MachineStatus: React.FC = () => {
             bgGradient="linear(to-br, green.50, white)"
             borderColor="green.100"
             variant="outline"
-          
             _hover={{ transform: "translateY(-4px)" }}
             transition="all 0.2s ease-in-out"
           >
@@ -896,7 +896,7 @@ const MachineStatus: React.FC = () => {
             bgGradient="linear(to-br, cyan.50, white)"
             borderColor="cyan.100"
             variant="outline"
-            _hover={{ transform: "translateY(-4px)"}}
+            _hover={{ transform: "translateY(-4px)" }}
             transition="all 0.2s ease-in-out"
           >
             <CardBody>
@@ -924,7 +924,7 @@ const MachineStatus: React.FC = () => {
             bgGradient="linear(to-br, purple.50, white)"
             borderColor="purple.100"
             variant="outline"
-            _hover={{ transform: "translateY(-4px)"}}
+            _hover={{ transform: "translateY(-4px)" }}
             transition="all 0.2s ease-in-out"
           >
             <CardBody>
@@ -1126,26 +1126,34 @@ const MachineStatus: React.FC = () => {
         </Card>
 
         {/* Charts */}
-        <HStack spacing={6} align="stretch">
+        <Stack
+          direction={{ base: "column", lg: "row" }}
+          spacing={6}
+          align="stretch"
+        >
           {/* Production & Temperature Chart */}
-          <Card flex="2">
+          <Card flex={{ base: "1", lg: "2" }} w="100%">
             <CardBody>
               <Heading size="md" mb={4}>
                 Machine Metrics
               </Heading>
-              <Box height="300px">
+
+              <Box h={{ base: "260px", md: "300px" }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+
                     <XAxis
                       dataKey="machine"
                       stroke="#718096"
                       fontSize={12}
-                      angle={-45}
+                      angle={{ base: -30, md: -45 }}
                       textAnchor="end"
                       height={80}
                     />
+
                     <YAxis stroke="#718096" fontSize={12} />
+
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "white",
@@ -1153,7 +1161,9 @@ const MachineStatus: React.FC = () => {
                         borderRadius: "8px",
                       }}
                     />
+
                     <Legend />
+
                     <Bar
                       dataKey="production"
                       fill="#3182CE"
@@ -1171,19 +1181,29 @@ const MachineStatus: React.FC = () => {
           </Card>
 
           {/* RPM & Pressure Chart */}
-          <Card flex="1">
+          <Card flex="1" w="100%">
             <CardBody>
               <Heading size="md" mb={4}>
                 RPM & Pressure
               </Heading>
-              <Box height="300px">
+
+              <Box h={{ base: "260px", md: "300px" }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                    <XAxis dataKey="machine" stroke="#718096" fontSize={12} />
+
+                    <XAxis
+                      dataKey="machine"
+                      stroke="#718096"
+                      fontSize={12}
+                      angle={{ base: -30, md: 0 }}
+                    />
+
                     <YAxis stroke="#718096" fontSize={12} />
+
                     <Tooltip />
                     <Legend />
+
                     <Bar dataKey="rpm" fill="#38A169" name="RPM" />
                     <Bar
                       dataKey="pressure"
@@ -1195,8 +1215,7 @@ const MachineStatus: React.FC = () => {
               </Box>
             </CardBody>
           </Card>
-        </HStack>
-
+        </Stack>
         {/* Started At & Stopped At Timeline Chart */}
         {/* <Card mt={6}>
           <CardBody>
@@ -1372,118 +1391,137 @@ const MachineStatus: React.FC = () => {
               <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
                 {filteredData.map((item: any, index: number) => {
                   // Check if data is older than 10 seconds
-                  const ts = item.rawTimestamp ? new Date(item.rawTimestamp).getTime() : 0;
+                  const ts = item.rawTimestamp
+                    ? new Date(item.rawTimestamp).getTime()
+                    : 0;
                   const ageSec = ts > 0 ? (Date.now() - ts) / 1000 : Infinity;
                   const isDataStale = ageSec > 10;
-                  
+
                   // Override status if data is stale
-                  const displayPlcRunning = isDataStale ? false : item.plcRunning;
+                  const displayPlcRunning = isDataStale
+                    ? false
+                    : item.plcRunning;
                   const displayMotorStatus = isDataStale ? 0 : item.motorStatus;
 
                   return (
-                  <Card
-                    key={index}
-                    variant="elevated"
-                    size="sm"
-                    borderLeftWidth="6px"
-                    borderLeftColor={getStatusBorderColor(item.status)}
-                  
-                    _hover={{ transform: "translateY(-3px)" }}
-                    transition="all 0.2s ease-in-out"
-                  >
-                    <CardBody p={4} bgGradient={getStatusGradient(item.status)}>
-                      {/* Header with Device ID and Status */}
-                      {/* Header with Device ID, PLC info and Status */}
-                      <Flex justify="space-between" align="flex-start" mb={3}>
-                        {/* Left: Device + PLC Info */}
-                        <VStack align="start" spacing={0.5}>
-                          <Text
-                            fontSize="lg"
-                            fontWeight="bold"
-                            color="blue.700"
-                          >
-                            {item.deviceId}
-                          </Text>
-
-                          <Text
-                            fontSize="sm"
-                            fontWeight="medium"
-                            color="gray.600"
-                          >
-                            {item.plcModel}
-                          </Text>
-                          {Array.isArray(assignmentsMap[item.plcBrand]) &&
-                            assignmentsMap[item.plcBrand].length > 0 && (
-                              <HStack spacing={2} mt={1}>
-                                <Badge colorScheme="blue" variant="subtle" size="sm">
-                                  Assigned:
-                                </Badge>
-                                <Text fontSize="sm" color="gray.700">
-                                  {assignmentsMap[item.plcBrand].join(", ")}
-                                </Text>
-                              </HStack>
-                            )}
-                          {Array.isArray(productsByResource[norm(item.plcBrand)]) &&
-                            productsByResource[norm(item.plcBrand)].length > 0 && (
-                              <HStack spacing={2} mt={1}>
-                                <Badge colorScheme="purple" variant="subtle" size="sm">
-                                  Product:
-                                </Badge>
-                                <Text fontSize="sm" color="gray.700">
-                                  {productsByResource[norm(item.plcBrand)].join(", ")}
-                                </Text>
-                              </HStack>
-                            )}
-                        </VStack>
-
-                        {/* Right: Status & Protocol */}
-                        <VStack spacing={1} align="end">
-                          <HStack spacing={2}>
-                            <Box
-                              w={2}
-                              h={2}
-                              borderRadius="full"
-                              bg={getStatusBorderColor(item.status)}
-                              animation={
-                                item.status === "running"
-                                  ? "pulse 2s infinite"
-                                  : "none"
-                              }
-                            />
-                            <Badge
-                              colorScheme={getStatusColor(item.status)}
-                              variant="solid"
-                              size="sm"
-                              borderRadius="full"
-                              px={2}
-                              textTransform="capitalize"
+                    <Card
+                      key={index}
+                      variant="elevated"
+                      size="sm"
+                      borderLeftWidth="6px"
+                      borderLeftColor={getStatusBorderColor(item.status)}
+                      _hover={{ transform: "translateY(-3px)" }}
+                      transition="all 0.2s ease-in-out"
+                    >
+                      <CardBody
+                        p={4}
+                        bgGradient={getStatusGradient(item.status)}
+                      >
+                        {/* Header with Device ID and Status */}
+                        {/* Header with Device ID, PLC info and Status */}
+                        <Flex justify="space-between" align="flex-start" mb={3}>
+                          {/* Left: Device + PLC Info */}
+                          <VStack align="start" spacing={0.5}>
+                            <Text
+                              fontSize="lg"
+                              fontWeight="bold"
+                              color="blue.700"
                             >
-                              {item.status}
+                              {item.deviceId}
+                            </Text>
+
+                            <Text
+                              fontSize="sm"
+                              fontWeight="medium"
+                              color="gray.600"
+                            >
+                              {item.plcModel}
+                            </Text>
+                            {Array.isArray(assignmentsMap[item.plcBrand]) &&
+                              assignmentsMap[item.plcBrand].length > 0 && (
+                                <HStack spacing={2} mt={1}>
+                                  <Badge
+                                    colorScheme="blue"
+                                    variant="subtle"
+                                    size="sm"
+                                  >
+                                    Assigned:
+                                  </Badge>
+                                  <Text fontSize="sm" color="gray.700">
+                                    {assignmentsMap[item.plcBrand].join(", ")}
+                                  </Text>
+                                </HStack>
+                              )}
+                            {Array.isArray(
+                              productsByResource[norm(item.plcBrand)]
+                            ) &&
+                              productsByResource[norm(item.plcBrand)].length >
+                                0 && (
+                                <HStack spacing={2} mt={1}>
+                                  <Badge
+                                    colorScheme="purple"
+                                    variant="subtle"
+                                    size="sm"
+                                  >
+                                    Product:
+                                  </Badge>
+                                  <Text fontSize="sm" color="gray.700">
+                                    {productsByResource[
+                                      norm(item.plcBrand)
+                                    ].join(", ")}
+                                  </Text>
+                                </HStack>
+                              )}
+                          </VStack>
+
+                          {/* Right: Status & Protocol */}
+                          <VStack spacing={1} align="end">
+                            <HStack spacing={2}>
+                              <Box
+                                w={2}
+                                h={2}
+                                borderRadius="full"
+                                bg={getStatusBorderColor(item.status)}
+                                animation={
+                                  item.status === "running"
+                                    ? "pulse 2s infinite"
+                                    : "none"
+                                }
+                              />
+                              <Badge
+                                colorScheme={getStatusColor(item.status)}
+                                variant="solid"
+                                size="sm"
+                                borderRadius="full"
+                                px={2}
+                                textTransform="capitalize"
+                              >
+                                {item.status}
+                              </Badge>
+                            </HStack>
+
+                            <Badge
+                              colorScheme="purple"
+                              variant="subtle"
+                              size="sm"
+                            >
+                              {item.plcProtocol}
                             </Badge>
-                          </HStack>
+                          </VStack>
+                        </Flex>
 
-                          <Badge
-                            colorScheme="purple"
-                            variant="subtle"
-                            size="sm"
-                          >
-                            {item.plcProtocol}
-                          </Badge>
-                        </VStack>
-                      </Flex>
+                        {/* Timestamp */}
+                        <Box mb={3}>
+                          <Text fontSize="xs" color="gray.500" mb={1}>
+                            Last Updated
+                          </Text>
+                          <Text fontSize="sm" fontWeight="medium">
+                            {item.timestamp}
+                          </Text>
+                        </Box>
 
-                      {/* Timestamp */}
-                      <Box mb={3}>
-                        <Text fontSize="xs" color="gray.500" mb={1}>
-                          Last Updated
-                        </Text>
-                        <Text fontSize="sm" fontWeight="medium">
-                          {item.timestamp}
-                        </Text>
-                      </Box>
-
-                      {/* PLC Info */}
-                      {/* <Box mb={3}>
+                        {/* PLC Info */}
+                        {/* <Box mb={3}>
                         <Text fontSize="xs" color="gray.500" mb={1}>
                           PLC Model
                         </Text>
@@ -1496,123 +1534,125 @@ const MachineStatus: React.FC = () => {
                         </Badge>
                       </Box> */}
 
-                      {/* Performance Metrics */}
-                      <SimpleGrid columns={2} spacing={3} mb={3}>
-                        <Box>
-                          <Text fontSize="xs" color="gray.500" mb={1}>
-                            Production Count
-                          </Text>
-                          <Text
-                            fontSize="lg"
-                            fontWeight="bold"
-                            color="teal.600"
-                          >
-                            {item.productionCount}
-                          </Text>
-                        </Box>
-                        <Box>
-                          <Text fontSize="xs" color="gray.500" mb={1}>
-                            RPM
-                          </Text>
-                          <Badge
-                            colorScheme="blue"
-                            variant="solid"
-                            fontSize="sm"
-                            px={2}
-                          >
-                            {item.rpm}
-                          </Badge>
-                        </Box>
-                      </SimpleGrid>
+                        {/* Performance Metrics */}
+                        <SimpleGrid columns={2} spacing={3} mb={3}>
+                          <Box>
+                            <Text fontSize="xs" color="gray.500" mb={1}>
+                              Production Count
+                            </Text>
+                            <Text
+                              fontSize="lg"
+                              fontWeight="bold"
+                              color="teal.600"
+                            >
+                              {item.productionCount}
+                            </Text>
+                          </Box>
+                          <Box>
+                            <Text fontSize="xs" color="gray.500" mb={1}>
+                              RPM
+                            </Text>
+                            <Badge
+                              colorScheme="blue"
+                              variant="solid"
+                              fontSize="sm"
+                              px={2}
+                            >
+                              {item.rpm}
+                            </Badge>
+                          </Box>
+                        </SimpleGrid>
 
-                      {/* Temperature & Pressure */}
-                      <SimpleGrid columns={2} spacing={3} mb={3}>
-                        <Box>
-                          <Text fontSize="xs" color="gray.500" mb={1}>
-                            Temperature
-                          </Text>
-                          <Badge
-                            colorScheme={
-                              item.temperature >= 60
-                                ? "red"
-                                : item.temperature >= 45
-                                ? "yellow"
-                                : "green"
-                            }
-                            variant="solid"
-                            fontSize="sm"
-                            px={2}
-                          >
-                            {parseFloat(item.temperature || 0).toFixed(1)}°C
-                          </Badge>
-                        </Box>
-                        <Box>
-                          <Text fontSize="xs" color="gray.500" mb={1}>
-                            Pressure
-                          </Text>
-                          <Badge
-                            colorScheme="purple"
-                            variant="solid"
-                            fontSize="sm"
-                            px={2}
-                          >
-                            {item.pressure} bar
-                          </Badge>
-                        </Box>
-                      </SimpleGrid>
-
-                      {/* Motor & Production Status */}
-                      <Box>
-                        <Text fontSize="xs" color="gray.500" mb={2}>
-                          System Status
-                        </Text>
-                        <HStack spacing={4}>
-                          <Box textAlign="center">
-                            <Text fontSize="xs" color="gray.500">
-                              Motor
+                        {/* Temperature & Pressure */}
+                        <SimpleGrid columns={2} spacing={3} mb={3}>
+                          <Box>
+                            <Text fontSize="xs" color="gray.500" mb={1}>
+                              Temperature
                             </Text>
                             <Badge
                               colorScheme={
-                                displayMotorStatus === 1 ? "green" : "red"
+                                item.temperature >= 60
+                                  ? "red"
+                                  : item.temperature >= 45
+                                  ? "yellow"
+                                  : "green"
                               }
                               variant="solid"
-                              size="sm"
+                              fontSize="sm"
+                              px={2}
                             >
-                              {displayMotorStatus === 1 ? "ON" : "OFF"}
+                              {parseFloat(item.temperature || 0).toFixed(1)}°C
                             </Badge>
                           </Box>
-                          <Box textAlign="center">
-                            <Text fontSize="xs" color="gray.500">
-                              Production
+                          <Box>
+                            <Text fontSize="xs" color="gray.500" mb={1}>
+                              Pressure
                             </Text>
                             <Badge
-                              colorScheme={
-                                item.productionActive === 1 ? "green" : "red"
-                              }
+                              colorScheme="purple"
                               variant="solid"
-                              size="sm"
+                              fontSize="sm"
+                              px={2}
                             >
-                              {item.productionActive === 1
-                                ? "Active"
-                                : "Inactive"}
+                              {item.pressure} bar
                             </Badge>
                           </Box>
-                          <Box textAlign="center">
-                            <Text fontSize="xs" color="gray.500">
-                              PLC
-                            </Text>
-                            <Badge
-                              colorScheme={displayPlcRunning ? "green" : "red"}
-                              variant="solid"
-                              size="sm"
-                            >
-                              {displayPlcRunning ? "Running" : "Stopped"}
-                            </Badge>
-                          </Box>
-                        </HStack>
-                      </Box>
-                    </CardBody>
-                  </Card>
+                        </SimpleGrid>
+
+                        {/* Motor & Production Status */}
+                        <Box>
+                          <Text fontSize="xs" color="gray.500" mb={2}>
+                            System Status
+                          </Text>
+                          <HStack spacing={4}>
+                            <Box textAlign="center">
+                              <Text fontSize="xs" color="gray.500">
+                                Motor
+                              </Text>
+                              <Badge
+                                colorScheme={
+                                  displayMotorStatus === 1 ? "green" : "red"
+                                }
+                                variant="solid"
+                                size="sm"
+                              >
+                                {displayMotorStatus === 1 ? "ON" : "OFF"}
+                              </Badge>
+                            </Box>
+                            <Box textAlign="center">
+                              <Text fontSize="xs" color="gray.500">
+                                Production
+                              </Text>
+                              <Badge
+                                colorScheme={
+                                  item.productionActive === 1 ? "green" : "red"
+                                }
+                                variant="solid"
+                                size="sm"
+                              >
+                                {item.productionActive === 1
+                                  ? "Active"
+                                  : "Inactive"}
+                              </Badge>
+                            </Box>
+                            <Box textAlign="center">
+                              <Text fontSize="xs" color="gray.500">
+                                PLC
+                              </Text>
+                              <Badge
+                                colorScheme={
+                                  displayPlcRunning ? "green" : "red"
+                                }
+                                variant="solid"
+                                size="sm"
+                              >
+                                {displayPlcRunning ? "Running" : "Stopped"}
+                              </Badge>
+                            </Box>
+                          </HStack>
+                        </Box>
+                      </CardBody>
+                    </Card>
                   );
                 })}
               </SimpleGrid>
