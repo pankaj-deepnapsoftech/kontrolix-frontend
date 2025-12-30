@@ -1,7 +1,8 @@
 // @ts-nocheck
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useCookies } from "react-cookie";
+import { useSelector } from "react-redux";
 import Pagination from "../pagination/Pagination";
 import {
   Select,
@@ -63,14 +64,18 @@ interface StoppageEvent {
 
 const StoppageInfo: React.FC = () => {
   const [cookies] = useCookies();
+  const auth = useSelector((state: any) => state?.auth);
   const [period, setPeriod] = useState<string>("weekly");
   const [selectedMachine, setSelectedMachine] = useState<string>("all");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [statusLogs, setStatusLogs] = useState<StatusLog[]>([]);
   const [availableMachines, setAvailableMachines] = useState<string[]>([]);
   const [currentMachineStatus, setCurrentMachineStatus] = useState<Record<string, { status: string; stopped_at: string | null; timestamp: string }>>({});
+  const [supervisorResources, setSupervisorResources] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const LIMIT = 10;
+  
+  const norm = (s: any) => String(s || "").trim().toLowerCase();
 
   // Fetch available machines (brands)
   const fetchMachines = async () => {
@@ -188,10 +193,49 @@ const StoppageInfo: React.FC = () => {
     }
   };
 
+  // Fetch supervisor's assigned resources
+  const fetchSupervisorResources = useCallback(async () => {
+    try {
+      if (!auth?.isSupervisor || !auth?.id) {
+        setSupervisorResources([]);
+        return;
+      }
+      
+      const resp = await fetch(
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:9023/api/") +
+          `supervisor/${auth.id}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+        }
+      );
+      const json = await resp.json();
+      if (json.success && json.supervisor?.role) {
+        // Extract resource names from supervisor's role
+        const resourceNames = (json.supervisor.role || []).map((r: any) => 
+          norm(typeof r === 'object' && r.name ? r.name : r)
+        ).filter(Boolean);
+        setSupervisorResources(resourceNames);
+      } else {
+        setSupervisorResources([]);
+      }
+    } catch (error) {
+      console.error("Error fetching supervisor resources:", error);
+      setSupervisorResources([]);
+    }
+  }, [cookies, auth?.isSupervisor, auth?.id]);
+
   useEffect(() => {
     fetchMachines();
     fetchCurrentMachineStatus();
-  }, []);
+    if (auth?.isSupervisor) {
+      fetchSupervisorResources();
+    } else {
+      setSupervisorResources([]);
+    }
+  }, [auth?.isSupervisor, auth?.id]);
 
   useEffect(() => {
     fetchStatusLogs();
@@ -240,13 +284,24 @@ const StoppageInfo: React.FC = () => {
     });
   };
 
+  // Filter status logs based on supervisor resources
+  const filteredStatusLogs = useMemo(() => {
+    if (auth?.isSupervisor && supervisorResources.length > 0) {
+      return statusLogs.filter((log) => {
+        const itemBrand = norm(log.plc_brand);
+        return supervisorResources.includes(itemBrand);
+      });
+    }
+    return statusLogs;
+  }, [statusLogs, auth?.isSupervisor, supervisorResources]);
+
   // Process status logs to calculate stoppage events and durations
   const stoppageEvents = useMemo(() => {
     const stoppages: StoppageEvent[] = [];
     const machineStoppageMap = new Map<string, { startLog: StatusLog; startTime: Date }>();
 
     // Sort logs by timestamp (oldest first) to process chronologically
-    const sortedLogs = [...statusLogs].sort(
+    const sortedLogs = [...filteredStatusLogs].sort(
       (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
 
@@ -373,10 +428,10 @@ const StoppageInfo: React.FC = () => {
       (a, b) => new Date(b.stoppage_start).getTime() - new Date(a.stoppage_start).getTime()
     );
     
-    console.log(`Processed ${statusLogs.length} status logs into ${sortedStoppages.length} stoppage events`);
-    
+    console.log(`Processed ${filteredStatusLogs.length} status logs into ${sortedStoppages.length} stoppage events`);
+
     return sortedStoppages;
-  }, [statusLogs]);
+  }, [filteredStatusLogs]);
 
   // Filter stoppages by machine
   const filteredStoppages = useMemo(() => {

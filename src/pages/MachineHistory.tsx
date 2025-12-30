@@ -1,7 +1,8 @@
 // @ts-nocheck
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useCookies } from "react-cookie";
+import { useSelector } from "react-redux";
 import Pagination from "../pagination/Pagination";
 import {
   Box,
@@ -142,6 +143,7 @@ const StatCard: React.FC<StatCardProps> = ({
 
 const MachineHistory: React.FC = () => {
   const [cookies] = useCookies();
+  const auth = useSelector((state: any) => state?.auth);
   const [period, setPeriod] = useState<string>("weekly");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [plcData, setPlcData] = useState<PlcDataItem[]>([]);
@@ -151,6 +153,7 @@ const MachineHistory: React.FC = () => {
   const [assignmentsMap, setAssignmentsMap] = useState<any>({});
   const [productsByResource, setProductsByResource] = useState<any>({});
   const [resourceIdToName, setResourceIdToName] = useState<any>({});
+  const [supervisorResources, setSupervisorResources] = useState<string[]>([]);
   const LIMIT = 10;
   
   const norm = (s: any) => String(s || "").trim().toLowerCase();
@@ -336,10 +339,49 @@ const MachineHistory: React.FC = () => {
     } catch (_) {}
   };
 
+  // Fetch supervisor's assigned resources
+  const fetchSupervisorResources = useCallback(async () => {
+    try {
+      if (!auth?.isSupervisor || !auth?.id) {
+        setSupervisorResources([]);
+        return;
+      }
+      
+      const resp = await fetch(
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:9023/api/") +
+          `supervisor/${auth.id}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+        }
+      );
+      const json = await resp.json();
+      if (json.success && json.supervisor?.role) {
+        // Extract resource names from supervisor's role
+        const resourceNames = (json.supervisor.role || []).map((r: any) => 
+          norm(typeof r === 'object' && r.name ? r.name : r)
+        ).filter(Boolean);
+        setSupervisorResources(resourceNames);
+      } else {
+        setSupervisorResources([]);
+      }
+    } catch (error) {
+      console.error("Error fetching supervisor resources:", error);
+      setSupervisorResources([]);
+    }
+  }, [cookies, auth?.isSupervisor, auth?.id]);
+
   useEffect(() => {
     fetchAssignments();
     fetchResources();
-  }, []);
+    if (auth?.isSupervisor) {
+      fetchSupervisorResources();
+    } else {
+      setSupervisorResources([]);
+    }
+  }, [auth?.isSupervisor, auth?.id]);
 
   useEffect(() => {
     if (Object.keys(resourceIdToName || {}).length > 0) {
@@ -351,8 +393,19 @@ const MachineHistory: React.FC = () => {
     fetchPlcData();
   }, [period, page]);
 
-  // Use data directly from API (already paginated)
-  const paginatedData = plcData;
+  // Filter data based on supervisor resources
+  const filteredPlcData = useMemo(() => {
+    if (auth?.isSupervisor && supervisorResources.length > 0) {
+      return plcData.filter((item) => {
+        const itemBrand = norm(item.plc_brand);
+        return supervisorResources.includes(itemBrand);
+      });
+    }
+    return plcData;
+  }, [plcData, auth?.isSupervisor, supervisorResources]);
+
+  // Use filtered data (already paginated from API, but filtered for supervisor)
+  const paginatedData = filteredPlcData;
 
   // Calculate hasNextPage based on total count from server
   const hasNextPage = page * LIMIT < totalCount;
@@ -364,7 +417,7 @@ const MachineHistory: React.FC = () => {
 
   // Calculate statistics
   const stats = React.useMemo(() => {
-    if (!plcData.length) {
+    if (!filteredPlcData.length) {
       return {
         totalRecords: 0,
         avgTemperature: 0,
@@ -377,26 +430,26 @@ const MachineHistory: React.FC = () => {
       };
     }
 
-    const totalRecords = plcData.length;
+    const totalRecords = filteredPlcData.length;
     const avgTemperature =
-      plcData.reduce((sum, item) => sum + (item.temperature || 0), 0) /
+      filteredPlcData.reduce((sum, item) => sum + (item.temperature || 0), 0) /
       totalRecords;
     const avgPressure =
-      plcData.reduce((sum, item) => sum + (item.pressure || 0), 0) /
+      filteredPlcData.reduce((sum, item) => sum + (item.pressure || 0), 0) /
       totalRecords;
     const avgRpm =
-      plcData.reduce((sum, item) => sum + (item.rpm || 0), 0) / totalRecords;
-    const totalProduction = plcData.reduce(
+      filteredPlcData.reduce((sum, item) => sum + (item.rpm || 0), 0) / totalRecords;
+    const totalProduction = filteredPlcData.reduce(
       (sum, item) => sum + (item.production_count || 0),
       0
     );
-    const runningCount = plcData.filter((item) => item.plc_running).length;
-    const motorActiveCount = plcData.filter(
+    const runningCount = filteredPlcData.filter((item) => item.plc_running).length;
+    const motorActiveCount = filteredPlcData.filter(
       (item) => item.motor_status === 1
     ).length;
     const runningPercentage = (runningCount / totalRecords) * 100;
     const motorActivePercentage = (motorActiveCount / totalRecords) * 100;
-    const uniqueBrands = new Set(plcData.map((item) => item.plc_brand)).size;
+    const uniqueBrands = new Set(filteredPlcData.map((item) => item.plc_brand)).size;
 
     return {
       totalRecords,
@@ -408,11 +461,11 @@ const MachineHistory: React.FC = () => {
       motorActivePercentage: motorActivePercentage.toFixed(1),
       uniqueBrands,
     };
-  }, [plcData]);
+  }, [filteredPlcData]);
 
   // Prepare chart data - Temperature & Pressure over time
   const timeSeriesData = React.useMemo(() => {
-    return plcData
+    return filteredPlcData
       .slice()
       .reverse()
       .map((item) => ({
@@ -427,29 +480,29 @@ const MachineHistory: React.FC = () => {
         rpm: item.rpm || 0,
         production: item.production_count || 0,
       }));
-  }, [plcData]);
+  }, [filteredPlcData]);
 
   // Brand distribution data for pie chart
   const brandDistribution = React.useMemo(() => {
     const brandCounts: Record<string, number> = {};
-    plcData.forEach((item) => {
+    filteredPlcData.forEach((item) => {
       brandCounts[item.plc_brand] = (brandCounts[item.plc_brand] || 0) + 1;
     });
     return Object.entries(brandCounts).map(([name, value]) => ({
       name,
       value,
     }));
-  }, [plcData]);
+  }, [filteredPlcData]);
 
   // Status distribution for pie chart
   const statusDistribution = React.useMemo(() => {
-    const running = plcData.filter((item) => item.plc_running).length;
-    const stopped = plcData.length - running;
+    const running = filteredPlcData.filter((item) => item.plc_running).length;
+    const stopped = filteredPlcData.length - running;
     return [
       { name: "Running", value: running, color: colors.success[500] },
       { name: "Stopped", value: stopped, color: colors.error[500] },
     ];
-  }, [plcData]);
+  }, [filteredPlcData]);
 
   const COLORS = [
     colors.primary[500],
@@ -560,7 +613,7 @@ const MachineHistory: React.FC = () => {
             </p>
           </div>
         </div>
-      ) : plcData.length === 0 ? (
+      ) : filteredPlcData.length === 0 ? (
         <div
           className="rounded-xl border p-12 text-center"
           style={{

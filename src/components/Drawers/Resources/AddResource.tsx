@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Button,
   FormControl,
@@ -16,6 +16,7 @@ import { toast } from "react-toastify";
 import { useFormik } from "formik";
 import axios from "axios";
 import { useCookies } from "react-cookie";
+import { useSelector } from "react-redux";
 
 interface Resource {
   _id: string;
@@ -70,6 +71,7 @@ const AddResource = ({
 }: AddResourceProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cookies] = useCookies();
+  const auth = useSelector((state: any) => state?.auth);
   const [localEditResource] = useState(editResource);
   const [typeOptions, setTypeOptions] = useState([
     { value: "machine", label: "Machine" },
@@ -83,6 +85,9 @@ const AddResource = ({
   const [selectedName, setSelectedName] = useState<any>(null);
   const [showNewNameInput, setShowNewNameInput] = useState(false);
   const [newName, setNewName] = useState("");
+  const [supervisorResources, setSupervisorResources] = useState<string[]>([]);
+  
+  const norm = (s: any) => String(s || "").trim().toLowerCase();
 
   const handleAddNewType = () => {
     const trimmedType = newType.trim().toLowerCase();
@@ -187,6 +192,48 @@ const AddResource = ({
       }
     },
   });
+  // Fetch supervisor's assigned resources
+  const fetchSupervisorResources = useCallback(async () => {
+    try {
+      if (!auth?.isSupervisor || !auth?.id) {
+        setSupervisorResources([]);
+        return;
+      }
+      
+      const resp = await fetch(
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:9023/api/") +
+          `supervisor/${auth.id}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+        }
+      );
+      const json = await resp.json();
+      if (json.success && json.supervisor?.role) {
+        // Extract resource names from supervisor's role
+        const resourceNames = (json.supervisor.role || []).map((r: any) => 
+          norm(typeof r === 'object' && r.name ? r.name : r)
+        ).filter(Boolean);
+        setSupervisorResources(resourceNames);
+      } else {
+        setSupervisorResources([]);
+      }
+    } catch (error) {
+      console.error("Error fetching supervisor resources:", error);
+      setSupervisorResources([]);
+    }
+  }, [cookies, auth?.isSupervisor, auth?.id]);
+
+  useEffect(() => {
+    if (auth?.isSupervisor) {
+      fetchSupervisorResources();
+    } else {
+      setSupervisorResources([]);
+    }
+  }, [auth?.isSupervisor, auth?.id, fetchSupervisorResources]);
+
   useEffect(() => {
     if (editResource?.type) {
       const match = typeOptions.find((opt) => opt.value === editResource.type);
@@ -214,7 +261,15 @@ const AddResource = ({
         if (!json.success) {
           throw new Error(json.message || "Failed to fetch PLC brands");
         }
-        const opts = (json.data || []).map((b: string) => ({ value: b, label: b }));
+        let opts = (json.data || []).map((b: string) => ({ value: b, label: b }));
+        
+        // If supervisor, filter to only show assigned machines
+        if (auth?.isSupervisor && supervisorResources.length > 0) {
+          opts = opts.filter((opt: any) => 
+            supervisorResources.includes(norm(opt.value))
+          );
+        }
+        
         setBrandOptions(opts);
         if (editResource?.name) {
           const m = opts.find((o) => o.value.toLowerCase() === editResource.name.toLowerCase());
@@ -230,7 +285,7 @@ const AddResource = ({
         // silent fail, user can still type manually
       }
     })();
-  }, [editResource]);
+  }, [editResource, auth?.isSupervisor, supervisorResources, cookies]);
 
   return (
     // <Drawer closeDrawerHandler={closeDrawerHandler}>
@@ -359,7 +414,10 @@ const AddResource = ({
               placeholder="Select Name"
               name="name"
               value={selectedName}
-              options={[...brandOptions, { value: "__add_new__", label: "+ Add New Name" }]}
+              options={[
+                ...brandOptions,
+                ...(auth?.isSuper ? [{ value: "__add_new__", label: "+ Add New Name" }] : [])
+              ]}
               styles={customStyles}
               onChange={(selected: any) => {
                 if (selected?.value === "__add_new__") {

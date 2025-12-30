@@ -1,7 +1,8 @@
 // @ts-nocheck
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useCookies } from "react-cookie";
+import { useSelector } from "react-redux";
 import Pagination from "../pagination/Pagination";
 import {
   Select,
@@ -59,6 +60,7 @@ interface MachineInfo {
 
 const MachineInfo: React.FC = () => {
   const [cookies] = useCookies();
+  const auth = useSelector((state: any) => state?.auth);
   const [period, setPeriod] = useState<string>("weekly");
   const [selectedMachine, setSelectedMachine] = useState<string>("all");
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -68,6 +70,7 @@ const MachineInfo: React.FC = () => {
   const [assignmentsMap, setAssignmentsMap] = useState<any>({});
   const [productsByResource, setProductsByResource] = useState<any>({});
   const [resourceIdToName, setResourceIdToName] = useState<any>({});
+  const [supervisorResources, setSupervisorResources] = useState<string[]>([]);
   const LIMIT = 10;
   
   const norm = (s: any) => String(s || "").trim().toLowerCase();
@@ -229,11 +232,50 @@ const MachineInfo: React.FC = () => {
     } catch (_) {}
   };
 
+  // Fetch supervisor's assigned resources
+  const fetchSupervisorResources = useCallback(async () => {
+    try {
+      if (!auth?.isSupervisor || !auth?.id) {
+        setSupervisorResources([]);
+        return;
+      }
+      
+      const resp = await fetch(
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:9023/api/") +
+          `supervisor/${auth.id}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+        }
+      );
+      const json = await resp.json();
+      if (json.success && json.supervisor?.role) {
+        // Extract resource names from supervisor's role
+        const resourceNames = (json.supervisor.role || []).map((r: any) => 
+          norm(typeof r === 'object' && r.name ? r.name : r)
+        ).filter(Boolean);
+        setSupervisorResources(resourceNames);
+      } else {
+        setSupervisorResources([]);
+      }
+    } catch (error) {
+      console.error("Error fetching supervisor resources:", error);
+      setSupervisorResources([]);
+    }
+  }, [cookies, auth?.isSupervisor, auth?.id]);
+
   useEffect(() => {
     fetchMachines();
     fetchAssignments();
     fetchResources();
-  }, []);
+    if (auth?.isSupervisor) {
+      fetchSupervisorResources();
+    } else {
+      setSupervisorResources([]);
+    }
+  }, [auth?.isSupervisor, auth?.id]);
 
   useEffect(() => {
     if (Object.keys(resourceIdToName || {}).length > 0) {
@@ -249,11 +291,22 @@ const MachineInfo: React.FC = () => {
     setPage(1);
   }, [period, selectedMachine]);
 
+  // Filter PLC data based on supervisor resources
+  const filteredPlcData = useMemo(() => {
+    if (auth?.isSupervisor && supervisorResources.length > 0) {
+      return plcData.filter((item) => {
+        const itemBrand = norm(item.plc_brand);
+        return supervisorResources.includes(itemBrand);
+      });
+    }
+    return plcData;
+  }, [plcData, auth?.isSupervisor, supervisorResources]);
+
   // Transform PLC data - Group by machine and get latest data per machine
   const machineInfoList = useMemo(() => {
     const machineMap = new Map<string, MachineInfo>();
 
-    plcData.forEach((item) => {
+    filteredPlcData.forEach((item) => {
       const machineKey = item.plc_brand;
       const ts = item.timestamp ? new Date(item.timestamp) : new Date();
 
@@ -303,8 +356,14 @@ const MachineInfo: React.FC = () => {
       }
     });
 
-    // Add missing machines
-    const missing = availableMachines.filter((b) => !machineMap.has(b));
+    // Add missing machines (filter by supervisor resources if supervisor)
+    let machinesToCheck = availableMachines;
+    if (auth?.isSupervisor && supervisorResources.length > 0) {
+      machinesToCheck = availableMachines.filter((b) => 
+        supervisorResources.includes(norm(b))
+      );
+    }
+    const missing = machinesToCheck.filter((b) => !machineMap.has(b));
     missing.forEach((b) => {
       machineMap.set(b, {
         machineKey: b,
@@ -327,7 +386,7 @@ const MachineInfo: React.FC = () => {
     return Array.from(machineMap.values()).sort((a, b) =>
       a.plcBrand.localeCompare(b.plcBrand)
     );
-  }, [plcData, availableMachines]);
+  }, [filteredPlcData, availableMachines, auth?.isSupervisor, supervisorResources]);
 
   // Filter machines based on selection
   const displayedMachines = useMemo(() => {
