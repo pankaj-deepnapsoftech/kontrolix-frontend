@@ -63,11 +63,17 @@ const MachineStatus: React.FC = () => {
   const [cookies] = useCookies();
   const auth = useSelector((state: any) => state?.auth);
 
-  const BACKEND_API_BASE =
-    (process as any)?.env?.REACT_APP_BACKEND_URL || "http://localhost:9023/api/";
-  const machineApiUrl =
-    (BACKEND_API_BASE.endsWith("/") ? BACKEND_API_BASE : BACKEND_API_BASE + "/") + "plc/all";
-  const socketUrl = BACKEND_API_BASE.replace(/\/api\/?$/, "");
+  const API_BASE_URL =
+    process.env.REACT_APP_BACKEND_URL ||
+    "https://krishnalabels.rtpas.in/api || http://localhost:9023/api";
+
+  const SOCKET_BASE_URL =
+    process.env.REACT_APP_SOCKET_URL ||
+    "https://kontrolix.rtpas.in|| https://krishnalabels.rtpas.in || http://localhost:9023";
+
+  const BACKEND_API_BASE = API_BASE_URL.endsWith("/") ? API_BASE_URL : API_BASE_URL + "/";
+  const machineApiUrl = BACKEND_API_BASE + "plc/all";
+  const socketUrl = SOCKET_BASE_URL;
 
   // Store API summary data for statistics cards
   const [apiSummaryData, setApiSummaryData] = useState<any>(null);
@@ -287,8 +293,7 @@ const MachineStatus: React.FC = () => {
 
   const fetchPlcBrands = useCallback(async () => {
     try {
-      const base = BACKEND_API_BASE.endsWith("/") ? BACKEND_API_BASE : BACKEND_API_BASE + "/";
-      const resp = await fetch(base + "plc/brands", {
+      const resp = await fetch(BACKEND_API_BASE + "plc/brands", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -455,6 +460,7 @@ const MachineStatus: React.FC = () => {
   useEffect(() => {
     if (socketRef.current) return;
     const s = io(socketUrl, {
+      path: "/socket.io",
       transports: ["websocket"],
       reconnection: true,
       reconnectionDelay: 500,
