@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { useCookies } from "react-cookie";
 import Loading from "../../../ui/Loading";
 import { colors } from "../../../theme/colors";
+import { useSelector } from "react-redux";
 
 interface UpdateEmployeeProps {
   employeeId: string | undefined;
@@ -21,13 +22,14 @@ const UpdateEmployee: React.FC<UpdateEmployeeProps> = ({
   employeeId,
 }) => {
   const [cookies, setCookie] = useCookies();
+  const auth = useSelector((state: any) => state?.auth);
   const [isLoadingEmployee, setIsLoadingEmployee] = useState<boolean>(false);
   const [isUpdatingEmployee, setIsUpdatingEmployee] = useState<boolean>(false);
   const [firstname, setFirstname] = useState<string | undefined>();
   const [lastname, setLastname] = useState<string | undefined>();
   const [phone, setPhone] = useState<string | undefined>();
   const [email, setEmail] = useState<string | undefined>();
-  const [role, setRole] = useState<{ value: string; label: string }[]>([]);
+  const [role, setRole] = useState<{ value: string; label: string } | null>(null);
 
   const [isSuper, setIsSuper] = useState<boolean | undefined>();
   const [isVerified, setIsVerified] = useState<string | undefined>();
@@ -41,28 +43,17 @@ const UpdateEmployee: React.FC<UpdateEmployeeProps> = ({
   const updateEmployeeHandler = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!role || (Array.isArray(role) && role.length === 0)) {
-      toast.error("Please provide all the required fields");
+    if (!role || !role.value) {
+      toast.error("Please select a machine role");
       return;
     }
     
     try {
       setIsUpdatingEmployee(true);
-      // Handle multiple roles (array) - since isMulti is enabled
-      // Extract array of role IDs from selected roles
-      let roleIds: string[] = [];
-      if (Array.isArray(role) && role.length > 0) {
-        roleIds = role.map((r) => r.value).filter(Boolean);
-      }
-
-      if (roleIds.length === 0) {
-        toast.error("Please select at least one role");
-        return;
-      }
-
+      // Send single role ID as array (backend expects array)
       const response = await updateEmployee({
         _id: employeeId,
-        role: roleIds,
+        role: [role.value],
       }).unwrap();
       toast.success(response.message);
       fetchEmployeesHandler();
@@ -98,18 +89,19 @@ const UpdateEmployee: React.FC<UpdateEmployeeProps> = ({
       const userRole = data.user?.role;
       // Handle role initialization - support both array and single role for backward compatibility
       if (Array.isArray(userRole) && userRole.length > 0) {
-        // Array of roles - convert to select format
-        const formattedRoles = userRole.map((r: any) => ({
-          value: typeof r === 'object' && r !== null && r._id ? r._id : r.value || r,
-          label: typeof r === 'object' && r !== null && (r.name || r.role) ? (r.name || r.role) : r.label || 'Role'
-        })).filter((r: any) => r.value); // Filter out invalid entries
-        setRole(formattedRoles as { value: string; label: string }[]);
+        // Array of roles - take the first one for single select
+        const firstRole = userRole[0];
+        const formattedRole = {
+          value: typeof firstRole === 'object' && firstRole !== null && firstRole._id ? firstRole._id : firstRole.value || firstRole,
+          label: typeof firstRole === 'object' && firstRole !== null && (firstRole.name || firstRole.role) ? (firstRole.name || firstRole.role) : firstRole.label || 'Role'
+        };
+        setRole(formattedRole);
       } else if (userRole && typeof userRole === 'object' && userRole._id) {
-        // Single role object (backward compatibility) - convert to array format for multi-select
-        setRole([{ value: userRole._id, label: (userRole.name || userRole.role || 'Role') as string }]);
+        // Single role object (backward compatibility)
+        setRole({ value: userRole._id, label: (userRole.name || userRole.role || 'Role') as string });
       } else {
-        // Fallback - empty array
-        setRole([]);
+        // Fallback - null
+        setRole(null);
       }
 
       setIsVerified(data.user.isVerified);
@@ -123,20 +115,21 @@ const UpdateEmployee: React.FC<UpdateEmployeeProps> = ({
 
   const fetchResourcesHandler = async () => {
     try {
-      const response = await fetch(
-        process.env.REACT_APP_BACKEND_URL + `resources/`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${cookies?.access_token}`,
-          },
-        }
-      );
+      // Always show only resources assigned to the employee's supervisor
+      // This applies whether employee is editing their own profile or admin/supervisor is editing
+      const url = process.env.REACT_APP_BACKEND_URL + `resources/for-employee/${employeeId}`;
+      
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${cookies?.access_token}`,
+        },
+      });
       const data = await response.json();
       if (!data.success) {
         throw new Error(data.message);
       }
-      const resources = data.resources;
+      const resources = data.resources || [];
       const modifiedResources = resources.map((resource: any) => ({
         value: resource._id,
         label: resource.name,
@@ -233,11 +226,10 @@ const UpdateEmployee: React.FC<UpdateEmployeeProps> = ({
                   Machine Role
                 </FormLabel>
                 <Select
-                  isMulti
                   value={role}
                   options={roleOptions}
                   onChange={(e: any) => setRole(e)}
-                  closeMenuOnSelect={false}
+                  isClearable
                   styles={{
                     control: (provided: any) => ({
                       ...provided,

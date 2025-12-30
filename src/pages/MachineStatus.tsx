@@ -1,7 +1,8 @@
 // @ts-nocheck
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useCookies } from "react-cookie";
+import { useSelector } from "react-redux";
 import {
   Box,
   Text,
@@ -57,8 +58,10 @@ const MachineStatus: React.FC = () => {
     const [assignmentsMap, setAssignmentsMap] = useState<any>({});
   const [productsByResource, setProductsByResource] = useState<any>({});
   const [resourceIdToName, setResourceIdToName] = useState<any>({});
+  const [supervisorResources, setSupervisorResources] = useState<string[]>([]); // Resource names assigned to supervisor
   const norm = (s: any) => String(s || "").trim().toLowerCase();
   const [cookies] = useCookies();
+  const auth = useSelector((state: any) => state?.auth);
 
   const BACKEND_API_BASE =
     (process as any)?.env?.REACT_APP_BACKEND_URL || "http://localhost:9023/api/";
@@ -391,6 +394,50 @@ const MachineStatus: React.FC = () => {
     } catch (_) {}
   }, [cookies, resourceIdToName]);
 
+  // Fetch supervisor's assigned resources
+  const fetchSupervisorResources = useCallback(async () => {
+    try {
+      if (!auth?.isSupervisor || !auth?.id) {
+        setSupervisorResources([]);
+        return;
+      }
+      
+      const resp = await fetch(
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:9023/api/") +
+          `supervisor/${auth.id}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${cookies?.access_token}`,
+          },
+        }
+      );
+      const json = await resp.json();
+      if (json.success && json.supervisor?.role) {
+        // Extract resource names from supervisor's role
+        const resourceNames = (json.supervisor.role || []).map((r: any) => 
+          norm(typeof r === 'object' && r.name ? r.name : r)
+        ).filter(Boolean);
+        setSupervisorResources(resourceNames);
+      } else {
+        setSupervisorResources([]);
+      }
+    } catch (error) {
+      console.error("Error fetching supervisor resources:", error);
+      setSupervisorResources([]);
+    }
+  }, [cookies, auth?.isSupervisor, auth?.id]);
+
+  // Fetch supervisor resources only once when auth changes
+  useEffect(() => {
+    if (auth?.isSupervisor) {
+      fetchSupervisorResources();
+    } else {
+      setSupervisorResources([]);
+    }
+  }, [auth?.isSupervisor, auth?.id, fetchSupervisorResources]);
+
+  // Fetch machine data and other initial data
   useEffect(() => {
     fetchMachineData(selectedMachine);
     fetchAssignments();
@@ -487,21 +534,31 @@ const MachineStatus: React.FC = () => {
     return () => clearInterval(interval);
   }, [autoRefresh, refreshInterval, selectedMachine, fetchMachineData]);
 
-  // Filter data based on selections
-  const filteredData = machineData.filter((item) => {
-    if (selectedMachine !== "all" && item.machineKey !== selectedMachine)
-      return false;
-    if (selectedBrand !== "all" && item.plcBrand !== selectedBrand)
-      return false;
-    // Filter by production status
-    if (selectedProtocol === "active" && item.productionActive !== 1)
-      return false;
-    if (selectedProtocol === "inactive" && item.productionActive !== 0)
-      return false;
-    if (selectedStatus !== "all" && item.status !== selectedStatus)
-      return false;
-    return true;
-  });
+  // Filter data based on selections (memoized to prevent unnecessary recalculations)
+  const filteredData = useMemo(() => {
+    return machineData.filter((item) => {
+      // If supervisor, only show machines matching their assigned resources
+      if (auth?.isSupervisor && supervisorResources.length > 0) {
+        const itemBrand = norm(item.plcBrand);
+        if (!supervisorResources.includes(itemBrand)) {
+          return false;
+        }
+      }
+      
+      if (selectedMachine !== "all" && item.machineKey !== selectedMachine)
+        return false;
+      if (selectedBrand !== "all" && item.plcBrand !== selectedBrand)
+        return false;
+      // Filter by production status
+      if (selectedProtocol === "active" && item.productionActive !== 1)
+        return false;
+      if (selectedProtocol === "inactive" && item.productionActive !== 0)
+        return false;
+      if (selectedStatus !== "all" && item.status !== selectedStatus)
+        return false;
+      return true;
+    });
+  }, [machineData, auth?.isSupervisor, supervisorResources, selectedMachine, selectedBrand, selectedProtocol, selectedStatus]);
 
   // Prepare chart data
   const chartData = filteredData.map((item: any) => ({

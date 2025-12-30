@@ -153,6 +153,27 @@ const SupervisorDetails: React.FC<SupervisorDetailsProps> = ({
                 )}
               </div>
             </div>
+            <div className="mt-3 mb-5">
+              <p className="font-bold text-gray-700 mb-2">Resources</p>
+              <div className="bg-gray-50 p-3 rounded-md border">
+                {!supervisor.role || supervisor.role.length === 0 ? (
+                  <p className="text-gray-600">No resources assigned</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {supervisor.role.map((res: any, index: number) => (
+                      <li
+                        key={res._id || index}
+                        className="flex items-center text-gray-600"
+                      >
+                        <span className="w-2 h-2 bg-purple-500 rounded-full mr-3"></span>
+                        {res.name || "Unknown Resource"}
+                        {res.type && ` (${res.type})`}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>

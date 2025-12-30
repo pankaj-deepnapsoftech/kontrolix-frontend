@@ -32,6 +32,10 @@ const UpdateSupervisor: React.FC<UpdateSupervisorProps> = ({
   const [employeeOptions, setEmployeeOptions] = useState<{ value: string; label: string }[]>([]);
   const [selectedEmployees, setSelectedEmployees] = useState<{ value: string; label: string }[]>([]);
   const [isLoadingEmployees, setIsLoadingEmployees] = useState<boolean>(false);
+  const [resources, setResources] = useState<any[]>([]);
+  const [resourceOptions, setResourceOptions] = useState<{ value: string; label: string }[]>([]);
+  const [selectedResources, setSelectedResources] = useState<{ value: string; label: string }[]>([]);
+  const [isLoadingResources, setIsLoadingResources] = useState<boolean>(false);
 
   const customStyles = {
     control: (provided: any) => ({
@@ -104,6 +108,47 @@ const UpdateSupervisor: React.FC<UpdateSupervisorProps> = ({
     }
   }, [cookies, supervisorId]);
 
+  // Fetch unassigned resources on mount
+  useEffect(() => {
+    const fetchResources = async () => {
+      try {
+        setIsLoadingResources(true);
+        // Use unassigned endpoint with supervisorId to exclude resources assigned to other supervisors
+        // but include resources already assigned to this supervisor
+        const url = supervisorId 
+          ? `${process.env.REACT_APP_BACKEND_URL}resources/unassigned?supervisorId=${supervisorId}`
+          : `${process.env.REACT_APP_BACKEND_URL}resources/unassigned`;
+        const response = await fetch(
+          url,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${cookies?.access_token}`,
+            },
+          }
+        );
+        const result = await response.json();
+        if (result.success && Array.isArray(result.resources)) {
+          setResources(result.resources);
+          const options = result.resources.map((res: any) => ({
+            value: res._id,
+            label: res.name || "Unknown Resource",
+          }));
+          setResourceOptions(options);
+        }
+      } catch (error: any) {
+        console.error("Error fetching resources:", error);
+        toast.error("Failed to fetch resources");
+      } finally {
+        setIsLoadingResources(false);
+      }
+    };
+
+    if (supervisorId) {
+      fetchResources();
+    }
+  }, [cookies, supervisorId]);
+
   // Fetch supervisor details
   useEffect(() => {
     const fetchSupervisorDetails = async () => {
@@ -135,6 +180,15 @@ const UpdateSupervisor: React.FC<UpdateSupervisorProps> = ({
               label: `${emp.first_name || ""} ${emp.last_name || ""}${emp.email ? ` (${emp.email})` : ""}`.trim(),
             }));
             setSelectedEmployees(selected);
+          }
+          
+          // Set selected resources
+          if (sup.role && Array.isArray(sup.role)) {
+            const selected = sup.role.map((res: any) => ({
+              value: res._id || res,
+              label: res.name || "Unknown Resource",
+            }));
+            setSelectedResources(selected);
           }
         }
       } catch (error: any) {
@@ -178,6 +232,7 @@ const UpdateSupervisor: React.FC<UpdateSupervisorProps> = ({
             phone,
             address: address || "",
             assignedEmployees: selectedEmployees.map((emp: any) => emp.value),
+            role: selectedResources.map((res: any) => res.value),
           }),
         }
       );
@@ -337,6 +392,31 @@ const UpdateSupervisor: React.FC<UpdateSupervisorProps> = ({
                 <p className="text-xs text-gray-500 mt-1">
                   {selectedEmployees.length > 0
                     ? `${selectedEmployees.length} employee(s) selected`
+                    : ""}
+                </p>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel fontWeight="bold" color="gray.700">
+                  Select Resources
+                </FormLabel>
+                <Select
+                  className="mt-2"
+                  placeholder="Select resources"
+                  value={selectedResources}
+                  options={resourceOptions}
+                  styles={customStyles}
+                  onChange={(selected: any) => {
+                    setSelectedResources(selected || []);
+                  }}
+                  isMulti
+                  isClearable
+                  isLoading={isLoadingResources}
+                  isDisabled={isLoadingResources}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {selectedResources.length > 0
+                    ? `${selectedResources.length} resource(s) selected`
                     : ""}
                 </p>
               </FormControl>

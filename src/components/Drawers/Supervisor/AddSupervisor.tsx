@@ -33,6 +33,10 @@ const AddSupervisor: React.FC<AddSupervisorProps> = ({
   const [employeeOptions, setEmployeeOptions] = useState<{ value: string; label: string }[]>([]);
   const [selectedEmployees, setSelectedEmployees] = useState<{ value: string; label: string }[]>([]);
   const [isLoadingEmployees, setIsLoadingEmployees] = useState<boolean>(false);
+  const [resources, setResources] = useState<any[]>([]);
+  const [resourceOptions, setResourceOptions] = useState<{ value: string; label: string }[]>([]);
+  const [selectedResources, setSelectedResources] = useState<{ value: string; label: string }[]>([]);
+  const [isLoadingResources, setIsLoadingResources] = useState<boolean>(false);
 
   const customStyles = {
     control: (provided: any) => ({
@@ -99,6 +103,41 @@ const AddSupervisor: React.FC<AddSupervisorProps> = ({
     fetchEmployees();
   }, [cookies]);
 
+  // Fetch unassigned resources on mount
+  useEffect(() => {
+    const fetchResources = async () => {
+      try {
+        setIsLoadingResources(true);
+        // Use unassigned endpoint to exclude resources already assigned to other supervisors
+        const response = await fetch(
+          process.env.REACT_APP_BACKEND_URL + "resources/unassigned",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${cookies?.access_token}`,
+            },
+          }
+        );
+        const result = await response.json();
+        if (result.success && Array.isArray(result.resources)) {
+          setResources(result.resources);
+          const options = result.resources.map((res: any) => ({
+            value: res._id,
+            label: res.name || "Unknown Resource",
+          }));
+          setResourceOptions(options);
+        }
+      } catch (error: any) {
+        console.error("Error fetching resources:", error);
+        toast.error("Failed to fetch resources");
+      } finally {
+        setIsLoadingResources(false);
+      }
+    };
+
+    fetchResources();
+  }, [cookies]);
+
 
   const validatePassword = (value: string) => {
     const minLength = 8;
@@ -157,6 +196,7 @@ const AddSupervisor: React.FC<AddSupervisorProps> = ({
             phone,
             address: address || "",
             assignedEmployees: selectedEmployees.map((emp: any) => emp.value),
+            role: selectedResources.map((res: any) => res.value),
           }),
         }
       );
@@ -181,6 +221,7 @@ const AddSupervisor: React.FC<AddSupervisorProps> = ({
       setPasswordError(null);
       setAddress("");
       setSelectedEmployees([]);
+      setSelectedResources([]);
     } catch (error: any) {
       toast.error(error?.message || "Something went wrong");
     } finally {
@@ -432,6 +473,31 @@ const AddSupervisor: React.FC<AddSupervisorProps> = ({
               <p className="text-xs text-gray-500 mt-1">
                 {selectedEmployees.length > 0
                   ? `${selectedEmployees.length} employee(s) selected`
+                  : ""}
+              </p>
+            </FormControl>
+
+            <FormControl>
+              <FormLabel fontWeight="bold" color="gray.700">
+                Select Resources
+              </FormLabel>
+              <Select
+                className="mt-2"
+                placeholder="Select resources"
+                value={selectedResources}
+                options={resourceOptions}
+                styles={customStyles}
+                onChange={(selected: any) => {
+                  setSelectedResources(selected || []);
+                }}
+                isMulti
+                isClearable
+                isLoading={isLoadingResources}
+                isDisabled={isLoadingResources}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {selectedResources.length > 0
+                  ? `${selectedResources.length} resource(s) selected`
                   : ""}
               </p>
             </FormControl>
