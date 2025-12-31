@@ -42,19 +42,23 @@ const UpdateEmployee: React.FC<UpdateEmployeeProps> = ({
 
   const updateEmployeeHandler = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!role || !role.value) {
-      toast.error("Please select a machine role");
-      return;
-    }
     
     try {
       setIsUpdatingEmployee(true);
-      // Send single role ID as array (backend expects array)
-      const response = await updateEmployee({
+      // Always send role - if cleared (null), send empty array to clear role
+      const updateData: any = {
         _id: employeeId,
-        role: [role.value],
-      }).unwrap();
+      };
+      
+      // If role is selected, send it; if cleared (null), send empty array to remove role
+      if (role && role.value) {
+        updateData.role = [role.value];
+      } else {
+        // Role is cleared - send empty array to remove role
+        updateData.role = [];
+      }
+      
+      const response = await updateEmployee(updateData).unwrap();
       toast.success(response.message);
       fetchEmployeesHandler();
       closeDrawerHandler();
@@ -221,7 +225,7 @@ const UpdateEmployee: React.FC<UpdateEmployeeProps> = ({
                 </p>
               </div>
 
-              <FormControl className="mt-3 mb-5" isRequired>
+              <FormControl className="mt-3 mb-5">
                 <FormLabel fontWeight="bold" color="gray.700">
                   Machine Role
                 </FormLabel>
