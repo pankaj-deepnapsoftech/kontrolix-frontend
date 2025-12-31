@@ -427,6 +427,54 @@ const employeeApi = createApi({
   }),
 });
 
+const requestApi = createApi({
+  reducerPath: "requestApi",
+  baseQuery: fetchBaseQuery({
+    baseUrl: process.env.REACT_APP_BACKEND_URL + "request",
+    mode: "cors",
+    prepareHeaders: (headers) => {
+      const cookies = parseCookies();
+      const token = cookies?.access_token;
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+      return headers;
+    },
+  }),
+  tagTypes: ["Request"],
+
+  endpoints: (builder) => ({
+    fetchRequests: builder.query({
+      query: () => "/",
+      providesTags: ["Request"],
+    }),
+    createRequest: builder.mutation({
+      query: (data) => ({
+        url: "/",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Request"],
+    }),
+    approveRequest: builder.mutation({
+      query: ({ _id, comment }) => ({
+        url: `/${_id}/approve`,
+        method: "PUT",
+        body: { comment },
+      }),
+      invalidatesTags: ["Request"],
+    }),
+    rejectRequest: builder.mutation({
+      query: ({ _id, comment }) => ({
+        url: `/${_id}/reject`,
+        method: "PUT",
+        body: { comment },
+      }),
+      invalidatesTags: ["Request"],
+    }),
+  }),
+});
+
 const proformaInvoiceApi = createApi({
   reducerPath: "proformaInvoiceApi",
   baseQuery: fetchBaseQuery({
@@ -664,6 +712,7 @@ export {
   bomApi,
   userRoleApi,
   employeeApi,
+  requestApi,
   proformaInvoiceApi,
   invoiceApi,
   processApi,
@@ -744,6 +793,14 @@ export const {
   useLazyFetchEmployeesQuery,
   useUpdateEmployeeMutation,
 } = employeeApi;
+
+// Request APIs
+export const {
+  useFetchRequestsQuery,
+  useCreateRequestMutation,
+  useApproveRequestMutation,
+  useRejectRequestMutation,
+} = requestApi;
 
 // Proforma Invoice APIs
 export const {

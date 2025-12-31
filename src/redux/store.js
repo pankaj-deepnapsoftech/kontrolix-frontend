@@ -10,6 +10,7 @@ import {
   processApi,
   productApi,
   proformaInvoiceApi,
+  requestApi,
   storeApi,
   userRoleApi,
 } from "./api/api";
@@ -29,6 +30,7 @@ const store = configureStore({
     [bomApi.reducerPath]: bomApi.reducer,
     [userRoleApi.reducerPath]: userRoleApi.reducer,
     [employeeApi.reducerPath]: employeeApi.reducer,
+    [requestApi.reducerPath]: requestApi.reducer,
     [proformaInvoiceApi.reducerPath]: proformaInvoiceApi.reducer,
     [invoiceApi.reducerPath]: invoiceApi.reducer,
     [paymentApi.reducerPath]: paymentApi.reducer,
@@ -43,6 +45,7 @@ const store = configureStore({
       bomApi.middleware,
       userRoleApi.middleware,
       employeeApi.middleware,
+      requestApi.middleware,
       proformaInvoiceApi.middleware,
       invoiceApi.middleware,
       processApi.middleware,

@@ -24,13 +24,13 @@ const authSlice = createSlice({
             state.phone = action.payload.phone;
             // If supervisor, give access to all modules except supervisor
             if (action.payload.isSupervisor) {
-                state.allowedroutes = ["", "employee", "machine-history", "resources", "product", "machine-info", "stoppage-info", "userprofile"];
+                state.allowedroutes = ["", "employee", "machine-history", "resources", "product", "machine-info", "stoppage-info", "requests", "userprofile"];
             } else if (action.payload.isSuper) {
                 // Super admin has access to all routes
                 state.allowedroutes = [];
             } else {
-                // Employee: Only allow specific routes - Live Data, Machine History, Machine Info, Stoppage Info, My Profile
-                state.allowedroutes = ["", "machine-history", "machine-info", "stoppage-info", "userprofile"];
+                // Employee: Only allow specific routes - Live Data, Machine History, Machine Info, Stoppage Info, Requests, My Profile
+                state.allowedroutes = ["", "machine-history", "machine-info", "stoppage-info", "requests", "userprofile"];
             }
             state.isSuper = action.payload.isSuper;
             state.isSupervisor = action.payload.isSupervisor || false;

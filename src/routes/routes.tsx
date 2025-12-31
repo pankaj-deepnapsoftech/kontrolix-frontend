@@ -30,6 +30,8 @@ import { MdOutlineSpeed } from "react-icons/md";
 import StoppageInfo from "../pages/StoppageInfo";
 import { IoIosPeople } from "react-icons/io";
 import Supervisors from "../pages/Supervisors";
+import { FileText } from "lucide-react";
+import Requests from "../pages/Requests";
 const routes = [
   {
     name: "Live Data",
@@ -91,7 +93,13 @@ const routes = [
     element: <StoppageInfo />,
     isSublink: false,
   },
-
+  {
+    name: "Requests",
+    icon: <FileText />,
+    path: "requests",
+    element: <Requests />,
+    isSublink: false,
+  },
   {
     name: "My Profile",
     icon: <CgProfile />,
