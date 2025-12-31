@@ -10,9 +10,14 @@ import { RiMenu2Line } from "react-icons/ri";
 import logo from "../../assets/images/logo/logo.png";
 import { useCookies } from "react-cookie";
 import { toast } from "react-toastify";
+import { io } from "socket.io-client";
+import { useRef } from "react";
+import { useDispatch } from "react-redux";
+import { useFetchRequestsQuery, requestApi } from "../../redux/api/api";
 
 const Navigation: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [cookie, _, removeCookie] = useCookies();
   const { allowedroutes, isSuper, isSupervisor } = useSelector((state: any) => state.auth);
   const [checkMenu, setCheckMenu] = useState(false);
@@ -20,6 +25,12 @@ const Navigation: React.FC = () => {
   const [openSubMenus, setOpenSubMenus] = useState<{ [key: string]: boolean }>(
     {}
   );
+  const socketRef = useRef<any>(null);
+  const { data: requestsData } = useFetchRequestsQuery(undefined, {
+    skip: !isSuper && !isSupervisor, // Only fetch for admin and supervisor
+  });
+  
+  const pendingCount = requestsData?.pendingCount || 0;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -136,6 +147,11 @@ const Navigation: React.FC = () => {
                       <div className="flex items-center gap-3 whitespace-nowrap">
                         <span className="text-xl">{route.icon}</span>
                         <span className="font-medium ">{route.name}</span>
+                        {route.path === "requests" && pendingCount > 0 && (
+                          <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                            {pendingCount}
+                          </span>
+                        )}
                       </div>
                       {isAllowed && (
                         <span className="transition-transform duration-200">
@@ -199,6 +215,11 @@ const Navigation: React.FC = () => {
                     <li className="flex items-center gap-3">
                       <span className="text-xl">{route.icon}</span>
                       <span className="font-medium">{route.name}</span>
+                      {route.path === "requests" && pendingCount > 0 && (
+                        <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                          {pendingCount}
+                        </span>
+                      )}
                     </li>
                   </NavLink>
                 );
@@ -223,6 +244,11 @@ const Navigation: React.FC = () => {
                     <li className="flex items-center gap-3">
                       <span className="text-xl">{route.icon}</span>
                       <span className="font-medium">{route.name}</span>
+                      {route.path === "requests" && pendingCount > 0 && (
+                        <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                          {pendingCount}
+                        </span>
+                      )}
                     </li>
                   </NavLink>
                 );

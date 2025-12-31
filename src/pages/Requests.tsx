@@ -2,9 +2,12 @@
 
 import { Button, Select, Spinner, Badge, Textarea, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton, useDisclosure } from "@chakra-ui/react";
 import { FiSearch } from "react-icons/fi";
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { toast } from "react-toastify";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { useCookies } from "react-cookie";
+import { io } from "socket.io-client";
+import { requestApi } from "../redux/api/api";
 import { colors } from "../theme/colors";
 import {
   CheckCircle,
@@ -22,11 +25,14 @@ import {
 } from "../redux/api/api";
 
 const Requests: React.FC = () => {
+  const dispatch = useDispatch();
   const { isSuper, isSupervisor } = useSelector((state: any) => state.auth);
   const { data, isLoading, refetch } = useFetchRequestsQuery();
   const [createRequest] = useCreateRequestMutation();
   const [approveRequest] = useApproveRequestMutation();
   const [rejectRequest] = useRejectRequestMutation();
+  const [cookies] = useCookies();
+  const socketRef = useRef<any>(null);
 
   const [searchKey, setSearchKey] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -43,6 +49,63 @@ const Requests: React.FC = () => {
   });
 
   const requests = data?.requests || [];
+
+  // Socket setup for real-time updates
+  useEffect(() => {
+    if (!cookies?.access_token) return;
+
+    const socketUrl = process.env.REACT_APP_SOCKET_URL || 
+      (process.env.REACT_APP_BACKEND_URL || '').replace(/\/api\/?$/, '') || 
+      'http://localhost:9023';
+    
+    socketRef.current = io(socketUrl, {
+      withCredentials: true,
+      transports: ['websocket', 'polling'],
+      extraHeaders: {
+        Authorization: `Bearer ${cookies?.access_token || ''}`,
+      },
+    });
+
+    socketRef.current.on('connect', () => {
+      console.log('Socket connected for requests');
+      socketRef.current.emit('subscribeRequests');
+    });
+
+    socketRef.current.on('requestCreated', (newRequest: any) => {
+      console.log('New request created via socket:', newRequest);
+      // Invalidate RTK Query cache to trigger refetch
+      dispatch(requestApi.util.invalidateTags(['Request']));
+      if (isSuper || isSupervisor) {
+        toast.info('New request created');
+      }
+    });
+
+    socketRef.current.on('requestUpdated', (updatedRequest: any) => {
+      console.log('Request updated via socket:', updatedRequest);
+      // Invalidate RTK Query cache to trigger refetch
+      dispatch(requestApi.util.invalidateTags(['Request']));
+    });
+
+    socketRef.current.on('disconnect', () => {
+      console.log('Socket disconnected for requests');
+    });
+
+    socketRef.current.on('connect_error', (error: any) => {
+      console.error('Socket connection error:', error);
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.off('requestCreated');
+        socketRef.current.off('requestUpdated');
+        socketRef.current.off('connect');
+        socketRef.current.off('disconnect');
+        socketRef.current.off('connect_error');
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [cookies?.access_token, dispatch, isSuper, isSupervisor]);
 
   // Filter requests
   const filteredRequests = useMemo(() => {
