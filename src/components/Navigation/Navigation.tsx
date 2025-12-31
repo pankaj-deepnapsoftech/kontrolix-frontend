@@ -19,7 +19,7 @@ const Navigation: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [cookie, _, removeCookie] = useCookies();
-  const { allowedroutes, isSuper, isSupervisor } = useSelector((state: any) => state.auth);
+  const { allowedroutes, isSuper, isSupervisor, id: userId } = useSelector((state: any) => state.auth);
   const [checkMenu, setCheckMenu] = useState(false);
   const [showIcon, setShowIcon] = useState(false);
   const [openSubMenus, setOpenSubMenus] = useState<{ [key: string]: boolean }>(
@@ -38,6 +38,58 @@ const Navigation: React.FC = () => {
     }, 2000);
     return () => clearTimeout(timer);
   }, []);
+
+  // Socket setup for real-time request updates
+  useEffect(() => {
+    if ((!isSuper && !isSupervisor) || !cookie?.access_token) return; // Only for admin and supervisor
+
+    const socketUrl = process.env.REACT_APP_SOCKET_URL || 
+      (process.env.REACT_APP_BACKEND_URL || '').replace(/\/api\/?$/, '') || 
+      'http://localhost:9023';
+    
+    socketRef.current = io(socketUrl, {
+      withCredentials: true,
+      transports: ['websocket', 'polling'],
+      extraHeaders: {
+        Authorization: `Bearer ${cookie?.access_token || ''}`,
+      },
+    });
+
+    socketRef.current.on('connect', () => {
+      console.log('Socket connected for requests count');
+      // Send user data when subscribing
+      socketRef.current.emit('subscribeRequests', {
+        userId: userId,
+        isSupervisor: isSupervisor,
+        isSuper: isSuper
+      });
+    });
+
+    socketRef.current.on('requestCreated', () => {
+      // Invalidate RTK Query cache to trigger refetch
+      dispatch(requestApi.util.invalidateTags(['Request']));
+    });
+
+    socketRef.current.on('requestUpdated', () => {
+      // Invalidate RTK Query cache to trigger refetch
+      dispatch(requestApi.util.invalidateTags(['Request']));
+    });
+
+    socketRef.current.on('disconnect', () => {
+      console.log('Socket disconnected for requests count');
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.off('requestCreated');
+        socketRef.current.off('requestUpdated');
+        socketRef.current.off('connect');
+        socketRef.current.off('disconnect');
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [cookie?.access_token, isSuper, isSupervisor, userId, dispatch]);
 
   const handleCloseMenu = () => {
     if (window.innerWidth < 800) {

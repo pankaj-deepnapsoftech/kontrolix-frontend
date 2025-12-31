@@ -26,7 +26,7 @@ import {
 
 const Requests: React.FC = () => {
   const dispatch = useDispatch();
-  const { isSuper, isSupervisor } = useSelector((state: any) => state.auth);
+  const { isSuper, isSupervisor, id: userId } = useSelector((state: any) => state.auth);
   const { data, isLoading, refetch } = useFetchRequestsQuery();
   const [createRequest] = useCreateRequestMutation();
   const [approveRequest] = useApproveRequestMutation();
@@ -68,7 +68,12 @@ const Requests: React.FC = () => {
 
     socketRef.current.on('connect', () => {
       console.log('Socket connected for requests');
-      socketRef.current.emit('subscribeRequests');
+      // Send user data when subscribing
+      socketRef.current.emit('subscribeRequests', {
+        userId: userId,
+        isSupervisor: isSupervisor,
+        isSuper: isSuper
+      });
     });
 
     socketRef.current.on('requestCreated', (newRequest: any) => {
