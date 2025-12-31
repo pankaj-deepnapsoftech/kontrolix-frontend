@@ -70,6 +70,10 @@ const api = createApi({
       }),
       invalidatesTags: ["Auth"],
     }),
+    checkAdminExists: builder.query({
+      query: () => "auth/check-admin",
+      providesTags: ["Auth"],
+    }),
   }),
 });
 
@@ -729,6 +733,7 @@ export const {
   useResendOTPMutation,
   useResetPasswordMutation,
   useForgetPasswordMutation,
+  useLazyCheckAdminExistsQuery,
 } = api;
 
 // Product APIs

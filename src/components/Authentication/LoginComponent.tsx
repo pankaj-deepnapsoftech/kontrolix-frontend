@@ -19,6 +19,7 @@ interface LoginComponentProps {
   setShowForgetPasswordComponent: (show: boolean) => void;
   setShowOTPVerificationComponent: (show: boolean) => void;
   setShowRegisterComponent: (show: boolean) => void;
+  adminExists?: boolean;
 }
 
 
@@ -30,7 +31,8 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
   setShowLoginComponent,
   setShowForgetPasswordComponent,
   setShowOTPVerificationComponent,
-  setShowRegisterComponent
+  setShowRegisterComponent,
+  adminExists = false
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -156,18 +158,23 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
 
           {/* Links */}
           <div className="flex items-center justify-between text-sm mt-2">
-            <button
-              type="button"
-              onClick={() => {
-                setShowLoginComponent(false);
-                setShowRegisterComponent(true);
-                setShowForgetPasswordComponent(false);
-                setShowOTPVerificationComponent(false);
-              }}
-              className="text-blue-600 hover:text-blue-700 hover:underline font-medium transition-colors"
-            >
-              Create account
-            </button>
+            {!adminExists && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLoginComponent(false);
+                  setShowRegisterComponent(true);
+                  setShowForgetPasswordComponent(false);
+                  setShowOTPVerificationComponent(false);
+                }}
+                className="text-blue-600 hover:text-blue-700 hover:underline font-medium transition-colors"
+              >
+                Create account
+              </button>
+            )}
+            {adminExists && (
+              <span className="text-gray-500 text-sm">Admin already exists</span>
+            )}
 
             <button
               type="button"

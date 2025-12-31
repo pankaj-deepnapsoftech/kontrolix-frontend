@@ -76,7 +76,13 @@ const RegisterComponent: React.FC<RegisterComponentProps> = ({
       setShowRegisterComponent(false);
       setShowOTPVerificationComponent(true);
     } catch (err: any) {
-      toast.error(err?.message || err?.data?.message || "Something went wrong");
+      const errorMessage = err?.data?.message || err?.message || "Something went wrong";
+      toast.error(errorMessage);
+      // If admin already exists, close register component and show login
+      if (errorMessage.includes("Admin already created") || err?.data?.status === 403) {
+        setShowRegisterComponent(false);
+        setShowLoginComponent(true);
+      }
     } finally {
       setIsRegistering(false);
     }

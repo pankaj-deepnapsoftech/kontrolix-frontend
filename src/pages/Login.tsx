@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import LoginComponent from "../components/Authentication/LoginComponent";
 import ForgetPasswordComponent from "../components/Authentication/ForgetPasswordComponent";
 import OTPVerificationComponent from "../components/Authentication/OTPVerificationComponent";
 import RegisterComponent from "../components/Authentication/RegisterComponent";
+import { useLazyCheckAdminExistsQuery } from "../redux/api/api";
+import { toast } from "react-toastify";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState<string | undefined>();
@@ -13,6 +15,33 @@ const Login: React.FC = () => {
   const [showForgetPasswordComponent, setShowForgetPasswordComponent] = useState<boolean>(false);
   const [showRegisterComponent, setShowRegisterComponent] = useState<boolean>(false);
   const [showOTPVerificationComponent, setShowOTPVerificationComponent] = useState<boolean>(false);
+  const [adminExists, setAdminExists] = useState<boolean>(false);
+  
+  const [checkAdminExists] = useLazyCheckAdminExistsQuery();
+
+  useEffect(() => {
+    // Check if admin exists on component mount
+    const checkAdmin = async () => {
+      try {
+        const result = await checkAdminExists().unwrap();
+        setAdminExists(result.adminExists || false);
+      } catch (error) {
+        // If error, assume admin doesn't exist (for first time setup)
+        setAdminExists(false);
+      }
+    };
+    checkAdmin();
+  }, [checkAdminExists]);
+
+  // Block register if admin exists
+  const handleShowRegister = () => {
+    if (adminExists) {
+      toast.error("Admin already created. Please contact admin to create your account.");
+      return;
+    }
+    setShowRegisterComponent(true);
+    setShowLoginComponent(false);
+  };
 
 
   return (
@@ -41,7 +70,8 @@ const Login: React.FC = () => {
               setShowLoginComponent={setShowLoginComponent}
               setShowForgetPasswordComponent={setShowForgetPasswordComponent}
               setShowOTPVerificationComponent={setShowOTPVerificationComponent}
-              setShowRegisterComponent={setShowRegisterComponent}
+              setShowRegisterComponent={handleShowRegister}
+              adminExists={adminExists}
             />
           )}
 
@@ -54,7 +84,7 @@ const Login: React.FC = () => {
             />
           )}
 
-          {showRegisterComponent && (
+          {showRegisterComponent && !adminExists && (
             <RegisterComponent
               email={email}
               setEmail={setEmail}
